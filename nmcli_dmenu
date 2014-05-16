@@ -37,7 +37,7 @@ def current_ssids():
     """
     scan = ("nmcli -t -f ssid,security dev wifi list")
     res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split("\n")
-    return [i.strip("'") for i in res]
+    return [i.replace("'", "") for i in res]
 
 
 def vpn_connections(conns):
@@ -54,7 +54,7 @@ def vpn_connections(conns):
 def get_network_status():
     """Get current status of networking
 
-    Returns: string 'Enable' or 'Disable'
+    Returns: string 'Enable' or 'Disable',
 
     """
     stat = ("nmcli -t -f STATE nm status")
@@ -63,6 +63,34 @@ def get_network_status():
         return 'Disable'
     else:
         return 'Enable'
+
+
+def get_active_connections():
+    """Get currently active connections
+
+    Returns: list of strings
+
+    """
+    status = ("nmcli -t -f name con status")
+    active = Popen(split(status), stdout=PIPE).communicate()[0]
+    active = active.decode().split('\n')
+    del active[-1]
+    return active
+
+
+def mark_active(conns, active):
+    """Given a list of connections, mark currently active connections
+
+    Args: conns - list of strings
+    Returns: list of strings (active prepended with a '**')
+
+    """
+    conn_t = [i.split(":")[0] for i in conns]
+    act = [i for i in conn_t if i and i in active]
+    for i, conn in enumerate(conn_t):
+        if conn in act:
+            conns[i] = "**{}".format(conns[i])
+    return conns
 
 
 def other_actions():
@@ -82,14 +110,14 @@ def get_selection(ssids, vpns, other):
     Returns: selection (string)
 
     """
-
-    vpns = ["VPN: {}".format(i) for i in vpns]
-    inp = ssids + vpns + other
+    active = get_active_connections()
+    vpns = ["{}:VPN".format(i) for i in vpns]
+    inp = mark_active(ssids, active) + mark_active(vpns, active) + other
     inp_bytes = "\n".join(inp).encode()
     sel = Popen(split(DMENU.format(len(inp), "Actions")),
                 stdin=PIPE,
                 stdout=PIPE).communicate(input=inp_bytes)[0].decode()
-    if not sel:
+    if not sel.strip():
         sys.exit()
     return sel.strip()
 
@@ -166,14 +194,15 @@ def run():
             toggle_networking(sel)
         elif 'Launch' in sel:
             launch_connection_editor()
+        sys.exit()
     elif sel in ssids:
         # Set ssid, security if selection is an SSID
         ssid, security = sel.split(":")
-        ssid = ssid.strip("'").strip()
+        ssid = ssid.strip("'").strip().replace("**", "")
         security = security.strip()
-    elif sel.replace("VPN: ", "") in vpns:
-        # Select VPN connection (sel="VPN: pia_us_west")
-        ssid = sel.replace("VPN: ", "")
+    elif sel.replace(":VPN", "").replace("**", "") in vpns:
+        # Select VPN connection (sel="pia_us_west:VPN")
+        ssid = sel.replace(":VPN", "").replace("**", "")
     else:
         sys.exit()
     # Decide if selection is existing connection or new
