@@ -36,7 +36,7 @@ def current_ssids():
 
     """
     scan = ("nmcli -t -f ssid,security dev wifi list")
-    res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split()
+    res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split("\n")
     return [i.strip("'") for i in res]
 
 
