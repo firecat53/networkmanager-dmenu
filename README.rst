@@ -21,6 +21,8 @@ Requirements
 ------------
 
 1. Python 2.7+ or 3.2+
+2. NetworkManager
+3. Dmenu
 
 Installation
 ------------
