@@ -23,7 +23,7 @@ def current_conns():
     Returns: list of strings: ['firecat4153:WPA2', 'firecat4153x:WEP'...]
 
     """
-    conns = ("nmcli -f name,type con list")
+    conns = ("nmcli -t -f name,type con list")
     return Popen(split(conns),
                  stdout=PIPE).communicate()[0].decode().split('\n')
 
@@ -35,7 +35,7 @@ def current_ssids():
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ("nmcli -e yes -m tabular -t -f ssid,security dev wifi list")
+    scan = ("nmcli -t -f ssid,security dev wifi list")
     res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split()
     return [i.strip("'") for i in res]
 
@@ -47,7 +47,8 @@ def vpn_connections(conns):
     Returns: list of VPN connection names ['pia_us_west',...]
 
     """
-    return [i.split()[0] for i in conns if i and 'vpn' in i.split()[1]]
+    conns = [i.split(':') for i in conns if i]
+    return [i[0] for i in conns if i and 'vpn' in i[1]]
 
 
 def get_network_status():
@@ -56,7 +57,7 @@ def get_network_status():
     Returns: string 'Enable' or 'Disable'
 
     """
-    stat = ("nmcli -f STATE nm status")
+    stat = ("nmcli -t -f STATE nm status")
     res = Popen(split(stat), stdout=PIPE).communicate()[0]
     if 'connect' in res.decode():
         return 'Disable'
@@ -100,7 +101,7 @@ def toggle_existing(conn):
     Args: conn - string
 
     """
-    conn_status = ("nmcli -f GENERAL con status id {}".format(conn))
+    conn_status = ("nmcli -t -f GENERAL con status id {}".format(conn))
     res = Popen(split(conn_status), stdout=PIPE).communicate()[0]
     if 'activated' not in res.decode():
         updown = 'up'
@@ -176,7 +177,7 @@ def run():
     else:
         sys.exit()
     # Decide if selection is existing connection or new
-    if ssid in [i.split()[0] for i in conns if i][1:]:
+    if ssid in [i.split(':')[0] for i in conns if i][1:]:
         toggle_existing(ssid)
     else:
         if security:
