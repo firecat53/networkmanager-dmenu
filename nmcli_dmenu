@@ -32,11 +32,12 @@ def current_ssids():
     """Get list of current SSIDs seen by NetworkManager
 
     Returns: list -
-        ["'firecat4153':WPA2","'firecat4153-guest':", "'firecat4153x':WPA2"]
+        ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
     scan = ("nmcli -e yes -m tabular -t -f ssid,security dev wifi list")
-    return Popen(split(scan), stdout=PIPE).communicate()[0].decode().split()
+    res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split()
+    return [i.strip("'") for i in res]
 
 
 def vpn_connections(conns):
@@ -155,22 +156,25 @@ def set_new_connection(ssid, pw):
 def run():
     conns = current_conns()
     vpns = vpn_connections(conns)
+    ssids = current_ssids()
     other = other_actions()
-    sel = get_selection(current_ssids(), vpns, other)
+    sel = get_selection(ssids, vpns, other)
     if sel in other:
         # Parse other actions
         if 'Networking' in sel:
             toggle_networking(sel)
         elif 'Launch' in sel:
             launch_connection_editor()
-    elif sel not in vpns:
-        # Set ssid, security if selection is not a VPN
+    elif sel in ssids:
+        # Set ssid, security if selection is an SSID
         ssid, security = sel.split(":")
         ssid = ssid.strip("'").strip()
         security = security.strip()
+    elif sel.replace("VPN: ", "") in vpns:
+        # Select VPN connection (sel="VPN: pia_us_west")
+        ssid = sel.replace("VPN: ", "")
     else:
-        # Select VPN connection
-        ssid = sel
+        sys.exit()
     # Decide if selection is existing connection or new
     if ssid in [i.split()[0] for i in conns if i][1:]:
         toggle_existing(ssid)
