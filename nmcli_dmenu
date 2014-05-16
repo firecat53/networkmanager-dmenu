@@ -29,15 +29,19 @@ def current_conns():
 
 
 def current_ssids():
-    """Get list of current SSIDs seen by NetworkManager
+    """Get list of current SSIDs seen by NetworkManager and order by signal
+    strength
 
     Returns: list -
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ("nmcli -t -f ssid,security dev wifi list")
+    scan = ("nmcli -t -f ssid,security,signal dev wifi list")
     res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split("\n")
-    return [i.replace("'", "") for i in res]
+    del res[-1]
+    res = [i.rsplit(':', 1) for i in res]
+    res = sorted(res, key=lambda x: x[1], reverse=True)
+    return [i[0].replace("'", "") for i in res]
 
 
 def vpn_connections(conns):
@@ -112,7 +116,8 @@ def get_selection(ssids, vpns, other):
     """
     active = get_active_connections()
     vpns = ["{}:VPN".format(i) for i in vpns]
-    inp = mark_active(ssids, active) + mark_active(vpns, active) + other
+    inp = mark_active(ssids, active) + [""] + \
+          mark_active(vpns, active) + [""] + other
     inp_bytes = "\n".join(inp).encode()
     sel = Popen(split(DMENU.format(len(inp), "Actions")),
                 stdin=PIPE,
