@@ -1,0 +1,10 @@
+# fn = font string
+# nb = normal background (name, #RGB, or #RRGGBB)
+# nf = normal foreground
+# sb = selected background
+# sf = selected foreground
+# b =  (just set to empty value and menu will appear at the bottom
+# m = number of monitor to display on
+
+[dmenu]
+fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
