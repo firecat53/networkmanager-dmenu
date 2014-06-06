@@ -10,6 +10,7 @@ OR running the script as root
 Add dmenu formatting options if desired to ~/.config/networkmanager-dmenu/config.ini
 
 """
+import itertools
 from os.path import expanduser
 from shlex import split
 from subprocess import Popen, PIPE
@@ -20,20 +21,23 @@ except ImportError:
     import ConfigParser as configparser
 
 
-def dmenu_cmd():
+def dmenu_cmd(num_lines, prompt):
     """Parse config.ini if it exists and add options to the dmenu command
 
-    Returns: string  "dmenu -l {} -p {} -i ....."
+    Args: args - num_lines: number of lines to display
+                 prompt: prompt to show
+    Returns: command invocation (as a list of strings) for
+                dmenu -l <num_lines> -p <prompt> -i ...
 
     """
-    dmenu = "dmenu -l {} -p {} -i"
+    dmenu = ["dmenu", "-l", str(num_lines), "-p", str(prompt), "-i"]
     conf = configparser.ConfigParser()
     c = conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     if not c:
         return dmenu
     else:
-        extras = ["-{} {}".format(*i) for i in conf.items('dmenu')]
-        return "{} {}".format(dmenu, " ".join(extras))
+        extras = (["-" + str(k), str(v)] for (k, v) in conf.items('dmenu'))
+        return dmenu + list(itertools.chain.from_iterable(extras))
 
 
 def current_conns():
@@ -42,8 +46,8 @@ def current_conns():
     Returns: list of strings: ['firecat4153:WPA2', 'firecat4153x:WEP'...]
 
     """
-    conns = ("nmcli -t -f name,type con list")
-    return Popen(split(conns),
+    conns = ["nmcli", "-t", "-f", "name,type", "con", "list"]
+    return Popen(conns,
                  stdout=PIPE).communicate()[0].decode().split('\n')
 
 
@@ -55,8 +59,8 @@ def current_ssids():
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ("nmcli -t -f ssid,security,signal dev wifi list")
-    res = Popen(split(scan), stdout=PIPE).communicate()[0].decode().split("\n")
+    scan = ["nmcli", "-t", "-f", "ssid,security,signal", "dev", "wifi", "list"]
+    res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")
     del res[-1]
     res = [i.rsplit(':', 1) for i in res]
     res = sorted(res, key=lambda x: x[1], reverse=True)
@@ -80,8 +84,8 @@ def get_network_status():
     Returns: string 'Enable' or 'Disable',
 
     """
-    stat = ("nmcli -t -f STATE nm status")
-    res = Popen(split(stat), stdout=PIPE).communicate()[0]
+    stat = ["nmcli", "-t", "-f", "STATE", "nm", "status"]
+    res = Popen(stat, stdout=PIPE).communicate()[0]
     if 'connect' in res.decode():
         return 'Disable'
     else:
@@ -94,8 +98,8 @@ def get_active_connections():
     Returns: list of strings
 
     """
-    status = ("nmcli -t -f name con status")
-    active = Popen(split(status), stdout=PIPE).communicate()[0]
+    status = ["nmcli", "-t", "-f", "name", "con", "status"]
+    active = Popen(status, stdout=PIPE).communicate()[0]
     active = active.decode().split('\n')
     del active[-1]
     return active
@@ -138,7 +142,7 @@ def get_selection(ssids, vpns, other):
     inp = mark_active(ssids, active) + [""] + \
           mark_active(vpns, active) + [""] + other
     inp_bytes = "\n".join(inp).encode()
-    sel = Popen(split(dmenu_cmd().format(len(inp), "Actions")),
+    sel = Popen(dmenu_cmd(len(inp), "Actions"),
                 stdin=PIPE,
                 stdout=PIPE).communicate(input=inp_bytes)[0].decode()
     if not sel.strip():
@@ -153,14 +157,14 @@ def toggle_existing(conn):
     Args: conn - string
 
     """
-    conn_status = ("nmcli -t -f GENERAL con status id {}".format(conn))
-    res = Popen(split(conn_status), stdout=PIPE).communicate()[0]
+    conn_status = ["nmcli", "-t", "-f", "GENERAL", "con", "status", "id", conn ]
+    res = Popen(conn_status, stdout=PIPE).communicate()[0]
     if 'activated' not in res.decode():
         updown = 'up'
     else:
         updown = 'down'
-    conn_string = ("nmcli con {} id {}".format(updown, conn))
-    Popen(split(conn_string), stdout=PIPE).communicate()
+    conn_string = ["nmcli", "con", updown, "id", conn]
+    Popen(conn_string, stdout=PIPE).communicate()
 
 
 def toggle_networking(sel):
@@ -173,8 +177,8 @@ def toggle_networking(sel):
         updown = 'true'
     else:
         updown = 'false'
-    net = ("nmcli nm enable {}".format(updown))
-    Popen(split(net), stdout=PIPE).communicate()
+    net = ["nmcli", "nm", "enable", updown]
+    Popen(net, stdout=PIPE).communicate()
 
 
 def launch_connection_editor():
@@ -190,7 +194,7 @@ def get_passphrase():
     Returns: string
 
     """
-    return Popen(split(dmenu_cmd().format(0, "Passphrase")),
+    return Popen(dmenu_cmd(0, "Passphrase"),
                  stdin=PIPE, stdout=PIPE).communicate()[0].decode()
 
 
@@ -202,8 +206,8 @@ def set_new_connection(ssid, pw):
 
     """
     pw = "password {}".format(pw)
-    new_conn = ("nmcli dev wifi connect {} {}".format(ssid, pw))
-    Popen(split(new_conn), stdout=PIPE).communicate()
+    new_conn = ["nmcli", "dev", "wifi", "connect", ssid, pw]
+    Popen(new_conn, stdout=PIPE).communicate()
 
 
 def run():
