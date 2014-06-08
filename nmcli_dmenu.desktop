@@ -1,0 +1,8 @@
+[Desktop Entry]
+Categories=Settings;Network;
+Name=nmcli_dmenu
+GenericName=Picture Viewer
+Exec=nmcli_dmenu
+Type=Application
+
+
