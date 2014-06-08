@@ -12,7 +12,6 @@ Add dmenu formatting options if desired to ~/.config/networkmanager-dmenu/config
 """
 import itertools
 from os.path import expanduser
-from shlex import split
 from subprocess import Popen, PIPE
 import sys
 try:
@@ -185,7 +184,10 @@ def launch_connection_editor():
     """Launch the gui nm-connection-editor
 
     """
-    Popen(["nm-connection-editor"]).communicate()
+    try:
+        Popen(["nm-connection-editor"]).communicate()
+    except FileNotFoundError:
+        pass
 
 
 def get_passphrase():
