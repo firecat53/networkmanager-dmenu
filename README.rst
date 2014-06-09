@@ -30,6 +30,7 @@ Installation
 
 - To customize dmenu appearance, copy config.ini.example to ~/.config/networkmanager-dmenu/config.ini and edit.
 - Copy script somewhere in $PATH
+- If desired, copy the nmcli_dmenu.desktop to /usr/share/applications or ~/.local/share/applications.
 - If you want to run the script as $USER instead of ROOT, set `PolicyKit permissions`_. The script is usable for connecting to pre-existing connections without setting these, but you won't be able to enable/disable networking or add new connections.
 
 OR
