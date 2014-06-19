@@ -7,7 +7,8 @@ https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 
 OR running the script as root
 
-Add dmenu formatting options if desired to ~/.config/networkmanager-dmenu/config.ini
+Add dmenu formatting options if desired to
+~/.config/networkmanager-dmenu/config.ini
 
 """
 import itertools
@@ -46,8 +47,7 @@ def current_conns():
 
     """
     conns = ["nmcli", "-t", "-f", "name,type", "con", "list"]
-    return Popen(conns,
-                 stdout=PIPE).communicate()[0].decode().split('\n')
+    return Popen(conns, stdout=PIPE).communicate()[0].decode().split('\n')
 
 
 def current_ssids():
@@ -63,7 +63,23 @@ def current_ssids():
     del res[-1]
     res = [i.rsplit(':', 1) for i in res]
     res = sorted(res, key=lambda x: x[1], reverse=True)
+    res = unique_ssid(res)
     return [i[0].replace("'", "") for i in res]
+
+
+def unique_ssid(conns):
+    """Filters the list of ids, so that duplicate ids will only show the one
+    with the greatest strength. The list of ssids is already sorted by strength
+    so this just deletes any duplicates after the first item.
+
+    """
+    ssids = []
+    for conn in conns:
+        if conn[0] in ssids:
+            del conns[conns.index(conn)]
+        else:
+            ssids.append(conn[0])
+    return conns
 
 
 def vpn_connections(conns):
@@ -139,7 +155,7 @@ def get_selection(ssids, vpns, other):
     active = get_active_connections()
     vpns = ["{}:VPN".format(i) for i in vpns]
     inp = mark_active(ssids, active) + [""] + \
-          mark_active(vpns, active) + [""] + other
+        mark_active(vpns, active) + [""] + other
     inp_bytes = "\n".join(inp).encode()
     sel = Popen(dmenu_cmd(len(inp), "Actions"),
                 stdin=PIPE,
@@ -156,7 +172,7 @@ def toggle_existing(conn):
     Args: conn - string
 
     """
-    conn_status = ["nmcli", "-t", "-f", "GENERAL", "con", "status", "id", conn ]
+    conn_status = ["nmcli", "-t", "-f", "GENERAL", "con", "status", "id", conn]
     res = Popen(conn_status, stdout=PIPE).communicate()[0]
     if 'activated' not in res.decode():
         updown = 'up'
@@ -186,7 +202,7 @@ def launch_connection_editor():
     """
     try:
         Popen(["nm-connection-editor"]).communicate()
-    except FileNotFoundError:
+    except OSError:
         pass
 
 
