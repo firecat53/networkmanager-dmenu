@@ -62,9 +62,26 @@ def current_ssids():
     res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")
     del res[-1]
     res = [i.rsplit(':', 1) for i in res]
+    res = unique_ssid(res)
     res = sorted(res, key=lambda x: x[1], reverse=True)
     res = unique_ssid(res)
     return [i[0].replace("'", "") for i in res]
+
+def unique_ssid(conns):
+    """ Filters the list of ids, so that duplicate ids will only
+        show the one with the greatset strength
+    """
+    ssids = {}
+    for conn in conns:
+        ssid = conn[0]
+        strength = conn[1]
+        if ssid in ssids:
+            if ssids[ssid] < strength:
+                ssids[ssid] = strength
+        else:
+            ssids[ssid] = strength
+    conns = [[key,val] for (key,val) in ssids.items()]
+    return conns
 
 
 def unique_ssid(conns):
