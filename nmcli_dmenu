@@ -46,7 +46,7 @@ def current_conns():
     Returns: list of strings: ['firecat4153:WPA2', 'firecat4153x:WEP'...]
 
     """
-    conns = ["nmcli", "-t", "-f", "name,type", "con", "list"]
+    conns = ["nmcli", "-t", "-f", "name,type", "connection"]
     return Popen(conns, stdout=PIPE).communicate()[0].decode().split('\n')
 
 
@@ -58,7 +58,8 @@ def current_ssids():
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ["nmcli", "-t", "-f", "ssid,security,signal", "dev", "wifi", "list"]
+    scan = ["nmcli", "-t", "-f", "ssid,security,signal",
+            "device", "wifi", "list"]
     res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")
     del res[-1]
     res = [i.rsplit(':', 1) for i in res]
@@ -99,9 +100,9 @@ def get_network_status():
     Returns: string 'Enable' or 'Disable',
 
     """
-    stat = ["nmcli", "-t", "-f", "STATE", "nm", "status"]
+    stat = ["nmcli", "networking"]
     res = Popen(stat, stdout=PIPE).communicate()[0]
-    if 'connect' in res.decode():
+    if 'enabled' in res.decode():
         return 'Disable'
     else:
         return 'Enable'
@@ -113,7 +114,8 @@ def get_active_connections():
     Returns: list of strings
 
     """
-    status = ["nmcli", "-t", "-f", "name", "con", "status"]
+    status = ["nmcli", "-t", "-f", "name", "connection",
+              "show", "--active"]
     active = Popen(status, stdout=PIPE).communicate()[0]
     active = active.decode().split('\n')
     del active[-1]
@@ -127,7 +129,7 @@ def mark_active(conns, active):
     Returns: list of strings (active prepended with a '**')
 
     """
-    conn_t = [i.split(":")[0] for i in conns]
+    conn_t = [i.rsplit(":", 1)[0] for i in conns]
     act = [i for i in conn_t if i and i in active]
     for i, conn in enumerate(conn_t):
         if conn in act:
@@ -172,13 +174,13 @@ def toggle_existing(conn):
     Args: conn - string
 
     """
-    conn_status = ["nmcli", "-t", "-f", "GENERAL", "con", "status", "id", conn]
+    conn_status = ["nmcli", "-t", "-f", "GENERAL", "connection", "show", conn]
     res = Popen(conn_status, stdout=PIPE).communicate()[0]
     if 'activated' not in res.decode():
         updown = 'up'
     else:
         updown = 'down'
-    conn_string = ["nmcli", "con", updown, "id", conn]
+    conn_string = ["nmcli", "connection", updown, "id", conn]
     Popen(conn_string, stdout=PIPE).communicate()
 
 
@@ -189,10 +191,10 @@ def toggle_networking(sel):
 
     """
     if sel.startswith('Enable'):
-        updown = 'true'
+        updown = 'on'
     else:
-        updown = 'false'
-    net = ["nmcli", "nm", "enable", updown]
+        updown = 'off'
+    net = ["nmcli", "networking", updown]
     Popen(net, stdout=PIPE).communicate()
 
 
@@ -223,9 +225,21 @@ def set_new_connection(ssid, pw):
           pw - string
 
     """
-    pw = "password {}".format(pw)
-    new_conn = ["nmcli", "dev", "wifi", "connect", ssid, pw]
-    Popen(new_conn, stdout=PIPE).communicate()
+    pw = str(pw).strip()
+    new_conn = ["nmcli", "device", "wifi", "connect", ssid, "password", pw]
+    res = Popen(new_conn, stdout=PIPE).communicate()
+    # Delete connection if it fails somehow.
+    # With nmcli 0.9.10, you occasionally get an error message:
+    # "Error: Failed to add/activate new connection: Unknown error", which
+    # doesn't always mean the connection failed, so test for 'activated' or
+    # 'activating' in the connection status as well
+    status = ["nmcli", "-t", "-f", "GENERAL", "connection", "show", ssid]
+    active = Popen(status, stdout=PIPE).communicate()[0]
+    # Delete connections with errors
+    if "Error" in res and \
+            ('activating' not in active or 'activated' not in active):
+        delete = ["nmcli", "connection", "delete", ssid]
+        Popen(delete, stdout=PIPE).communicate()
 
 
 def run():
@@ -252,7 +266,7 @@ def run():
     else:
         sys.exit()
     # Decide if selection is existing connection or new
-    if ssid in [i.split(':')[0] for i in conns if i][1:]:
+    if ssid in [i.split(':')[0] for i in conns if i]:
         toggle_existing(ssid)
     else:
         if security:

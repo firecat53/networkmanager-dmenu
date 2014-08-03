@@ -28,6 +28,7 @@ Requirements
 Installation
 ------------
 
+- If using networkmanager < version 0.9.10 you _must_ checkout the 'networkmanager-0.9.8' branch. Some of the nmcli terminology changed with 0.9.10 and is _not_ compatible with previous versions.
 - To customize dmenu appearance, copy config.ini.example to ~/.config/networkmanager-dmenu/config.ini and edit.
 - Copy script somewhere in $PATH
 - If desired, copy the nmcli_dmenu.desktop to /usr/share/applications or ~/.local/share/applications.
@@ -44,3 +45,8 @@ Usage
 
 .. _PolicyKit permissions: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 .. _AUR Package: https://aur.archlinux.org/packages/networkmanager-dmenu-git/
+
+TODO
+----
+
+1. Add ability to delete connections
