@@ -1,3 +1,4 @@
+# [dmenu]
 # fn = font string
 # nb = normal background (name, #RGB, or #RRGGBB)
 # nf = normal foreground
@@ -5,6 +6,13 @@
 # sf = selected foreground
 # b =  (just set to empty value and menu will appear at the bottom
 # m = number of monitor to display on
+# [editor]
+# terminal = <name of terminal program>
+# gui_if_available = <True or False>
 
 [dmenu]
 fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
+
+[editor]
+terminal = urxvtc
+gui_if_available = True

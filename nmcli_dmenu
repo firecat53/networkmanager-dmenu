@@ -7,7 +7,7 @@ https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 
 OR running the script as root
 
-Add dmenu formatting options if desired to
+Add dmenu formatting options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
@@ -32,11 +32,15 @@ def dmenu_cmd(num_lines, prompt):
     """
     dmenu = ["dmenu", "-l", str(num_lines), "-p", str(prompt), "-i"]
     conf = configparser.ConfigParser()
-    c = conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    if not c:
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
+    try:
+        args = conf.items('dmenu')
+    except configparser.NoSectionError:
+        conf = False
+    if not conf:
         return dmenu
     else:
-        extras = (["-" + str(k), str(v)] for (k, v) in conf.items('dmenu'))
+        extras = (["-" + str(k), str(v)] for (k, v) in args)
         return dmenu + list(itertools.chain.from_iterable(extras))
 
 
@@ -199,13 +203,30 @@ def toggle_networking(sel):
 
 
 def launch_connection_editor():
-    """Launch the gui nm-connection-editor
+    """Launch nmtui or the gui nm-connection-editor
 
     """
+    conf = configparser.ConfigParser()
+    terminal = "xterm"
+    gui_if_available = "True"
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     try:
-        Popen(["nm-connection-editor"]).communicate()
-    except OSError:
-        pass
+        editor = conf.items("editor")
+    except configparser.NoSectionError:
+        conf = False
+    if conf:
+        opts = {str(k): str(v) for (k, v) in editor}
+        if "terminal" in opts:
+            terminal = opts["terminal"]
+        if "gui_if_available" in opts:
+            gui_if_available = opts["gui_if_available"]
+    if gui_if_available == "True":
+        try:
+            Popen(["nm-connection-editor"]).communicate()
+        except OSError:
+            Popen([terminal, "-e", "nmtui"]).communicate()
+    else:
+        Popen([terminal, "-e", "nmtui"]).communicate()
 
 
 def get_passphrase():
