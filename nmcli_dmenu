@@ -30,7 +30,7 @@ def dmenu_cmd(num_lines, prompt):
                 dmenu -l <num_lines> -p <prompt> -i ...
 
     """
-    dmenu = ["dmenu", "-l", str(num_lines), "-p", str(prompt), "-i"]
+    dmenu_command = "dmenu"
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     try:
@@ -38,10 +38,15 @@ def dmenu_cmd(num_lines, prompt):
     except configparser.NoSectionError:
         conf = False
     if not conf:
-        return dmenu
+        return [dmenu_command, "-l", str(num_lines), "-p", str(prompt), "-i"]
     else:
-        extras = (["-" + str(k), str(v)] for (k, v) in args)
-        return dmenu + list(itertools.chain.from_iterable(extras))
+        args_dict = dict(args)
+        if "dmenu_command" in args_dict:
+            dmenu_command = args_dict["dmenu_command"]
+            del args_dict["dmenu_command"]
+        extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
+        return [dmenu_command, "-l", str(num_lines), "-p", str(prompt), "-i"] \
+            + list(itertools.chain.from_iterable(extras))
 
 
 def current_conns():

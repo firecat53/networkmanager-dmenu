@@ -31,6 +31,7 @@ Installation
 - If using networkmanager < version 0.9.10 you _must_ checkout the 'networkmanager-0.9.8' branch. Some of the nmcli terminology changed with 0.9.10 and is _not_ compatible with previous versions.
 - To customize dmenu appearance, copy config.ini.example to ~/.config/networkmanager-dmenu/config.ini and edit.
 - Set default terminal (xterm, urxvtc, etc.) command in config.ini if desired.
+- Set your dmenu_command in config.ini if it's not 'dmenu' (for example dmenu_run or dmenu2). The alternate command should still respect the -l, -p and -i flags.
 - Copy script somewhere in $PATH
 - If desired, copy the nmcli_dmenu.desktop to /usr/share/applications or ~/.local/share/applications.
 - If you want to run the script as $USER instead of ROOT, set `PolicyKit permissions`_. The script is usable for connecting to pre-existing connections without setting these, but you won't be able to enable/disable networking or add new connections.

@@ -1,4 +1,5 @@
 # [dmenu]
+# dmenu_command = /usr/bin/dmenu
 # fn = font string
 # nb = normal background (name, #RGB, or #RRGGBB)
 # nf = normal foreground
