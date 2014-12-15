@@ -21,7 +21,7 @@ except ImportError:
     import ConfigParser as configparser
 
 
-def dmenu_cmd(num_lines, prompt):
+def dmenu_cmd(num_lines, prompt="Networks"):
     """Parse config.ini if it exists and add options to the dmenu command
 
     Args: args - num_lines: number of lines to display
@@ -38,15 +38,26 @@ def dmenu_cmd(num_lines, prompt):
     except configparser.NoSectionError:
         conf = False
     if not conf:
-        return [dmenu_command, "-l", str(num_lines), "-p", str(prompt), "-i"]
+        res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
     else:
         args_dict = dict(args)
         if "dmenu_command" in args_dict:
             dmenu_command = args_dict["dmenu_command"]
             del args_dict["dmenu_command"]
+        if "p" in args_dict and prompt == "Networks":
+            prompt = args_dict["p"]
+            del args_dict["p"]
+        elif "p" in args_dict:
+            del args_dict["p"]
+        if "rofi" in dmenu_command:
+            lines = "-dmenu -lines"
+        else:
+            lines = "-i -l"
         extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-        return [dmenu_command, "-l", str(num_lines), "-p", str(prompt), "-i"] \
+        res = [dmenu_command, str(num_lines), "-p", str(prompt)] \
             + list(itertools.chain.from_iterable(extras))
+        res[1:1] = lines.split()
+        return res
 
 
 def current_conns():
@@ -168,7 +179,7 @@ def get_selection(ssids, vpns, other):
     inp = mark_active(ssids, active) + [""] + \
         mark_active(vpns, active) + [""] + other
     inp_bytes = "\n".join(inp).encode()
-    sel = Popen(dmenu_cmd(len(inp), "Actions"),
+    sel = Popen(dmenu_cmd(len(inp)),
                 stdin=PIPE,
                 stdout=PIPE).communicate(input=inp_bytes)[0].decode()
     if not sel.strip():
