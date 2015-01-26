@@ -57,7 +57,7 @@ def dmenu_cmd(num_lines, prompt="Networks"):
         res = [dmenu_command, str(num_lines), "-p", str(prompt)] \
             + list(itertools.chain.from_iterable(extras))
         res[1:1] = lines.split()
-        return res
+    return res
 
 
 def current_conns():
