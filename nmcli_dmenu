@@ -60,6 +60,24 @@ def dmenu_cmd(num_lines, prompt="Networks"):
     return res
 
 
+def choose_adapter():
+    """If there is more than one wifi adapter installed, ask which one to use
+
+    """
+    adps = ["nmcli", "device", "status"]
+    a = Popen(adps, stdout=PIPE).communicate()[0].decode().split('\n')
+    all_adps = [i.split()[0] for i in a if 'wifi' in i]
+    if len(all_adps) <= 1:
+        return all_adps[0].strip()
+    all_adps_bytes = "\n".join(all_adps).encode()
+    sel = Popen(dmenu_cmd(len(all_adps), "CHOOSE ADAPTER:"),
+                stdin=PIPE,
+                stdout=PIPE).communicate(input=all_adps_bytes)[0].decode()
+    if not sel.strip():
+        sys.exit()
+    return sel.strip()
+
+
 def current_conns():
     """Get list of current NetworkManager connections (ssid:security)
 
@@ -70,7 +88,7 @@ def current_conns():
     return Popen(conns, stdout=PIPE).communicate()[0].decode().split('\n')
 
 
-def current_ssids():
+def current_ssids(adapter):
     """Get list of current SSIDs seen by NetworkManager and order by signal
     strength
 
@@ -79,7 +97,7 @@ def current_ssids():
 
     """
     scan = ["nmcli", "-t", "-f", "ssid,security,signal",
-            "device", "wifi", "list"]
+            "device", "wifi", "list", "ifname", adapter]
     res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")
     del res[-1]
     res = [i.rsplit(':', 1) for i in res]
@@ -280,9 +298,10 @@ def set_new_connection(ssid, pw):
 
 
 def run():
+    adapter = choose_adapter()
     conns = current_conns()
     vpns = vpn_connections(conns)
-    ssids = current_ssids()
+    ssids = current_ssids(adapter)
     other = other_actions()
     sel = get_selection(ssids, vpns, other)
     if sel in other:

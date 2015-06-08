@@ -11,6 +11,7 @@ Features
 - Connect to _existing_ VPN connections 
 - Enable/Disable networking
 - Launch nm-connection-editor GUI
+- Support for multiple wifi adapters
 
 License
 -------
