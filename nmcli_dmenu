@@ -97,7 +97,8 @@ def current_ssids(adapter):
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ["nmcli", "-p", "-f", "in-use,ssid,security,bars,signal","device", "wifi", "list", "ifname", adapter]
+    scan = ["nmcli", "-p", "-f", "in-use,ssid,security,bars,signal", "device",
+            "wifi", "list", "ifname", adapter]
     res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")[5:-1]
     res = [i.rstrip().rsplit(' ', 1) for i in res]
     res = sorted(res, key=lambda x: int(x[1]), reverse=True)
@@ -114,8 +115,8 @@ def unique_ssid(conns):
     ssids = []
     cons = []
     for conn in conns:
-        s=conn[0].rstrip().rsplit(' ',1)[0].strip()
-        i=conns.index(conn)
+        s = conn[0].rstrip().rsplit(' ', 1)[0].strip()
+        i = conns.index(conn)
         if s not in ssids:
             ssids.append(s)
             cons.append(conns[i])
@@ -311,7 +312,8 @@ def run():
         sys.exit()
     elif sel in ssids:
         # Set ssid, security if selection is an SSID
-        ssid, security = [i for i in  sel.strip().rsplit('  ') if i != ''][-3:-1]
+        ssid, security = [i for i in sel.strip().rsplit('  ')
+                          if i != ''][-3:-1]
         security = security.strip()
         ssid = ssid.strip()
     elif sel.replace(":VPN", "").replace("**", "") in vpns:
