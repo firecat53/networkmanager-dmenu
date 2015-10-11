@@ -12,6 +12,7 @@ Add dmenu formatting options and default terminal if desired to
 
 """
 import itertools
+import os
 from os.path import expanduser
 from subprocess import Popen, PIPE
 import sys
@@ -96,14 +97,12 @@ def current_ssids(adapter):
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ["nmcli", "-t", "-f", "ssid,security,signal",
-            "device", "wifi", "list", "ifname", adapter]
-    res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")
-    del res[-1]
-    res = [i.rsplit(':', 1) for i in res]
-    res = sorted(res, key=lambda x: x[1], reverse=True)
+    scan = ["nmcli", "-p", "-f", "in-use,ssid,security,bars,signal","device", "wifi", "list", "ifname", adapter]
+    res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")[5:-1]
+    res = [i.rstrip().rsplit(' ', 1) for i in res]
+    res = sorted(res, key=lambda x: int(x[1]), reverse=True)
     res = unique_ssid(res)
-    return [i[0].replace("'", "") for i in res]
+    return [i[0].replace("'", "").rstrip() for i in res]
 
 
 def unique_ssid(conns):
@@ -113,12 +112,14 @@ def unique_ssid(conns):
 
     """
     ssids = []
+    cons = []
     for conn in conns:
-        if conn[0] in ssids:
-            del conns[conns.index(conn)]
-        else:
-            ssids.append(conn[0])
-    return conns
+        s=conn[0].rstrip().rsplit(' ',1)[0].strip()
+        i=conns.index(conn)
+        if s not in ssids:
+            ssids.append(s)
+            cons.append(conns[i])
+    return cons
 
 
 def vpn_connections(conns):
@@ -139,7 +140,7 @@ def get_network_status():
 
     """
     stat = ["nmcli", "networking"]
-    res = Popen(stat, stdout=PIPE).communicate()[0]
+    res = Popen(stat, stdout=PIPE,env=dict(os.environ, LANG="C")).communicate()[0]
     if 'enabled' in res.decode():
         return 'Disable'
     else:
@@ -194,15 +195,15 @@ def get_selection(ssids, vpns, other):
     """
     active = get_active_connections()
     vpns = ["{}:VPN".format(i) for i in vpns]
-    inp = mark_active(ssids, active) + [""] + \
+    inp = ssids + [""] + \
         mark_active(vpns, active) + [""] + other
     inp_bytes = "\n".join(inp).encode()
-    sel = Popen(dmenu_cmd(len(inp)),
+    sel = Popen(dmenu_cmd(32),
                 stdin=PIPE,
                 stdout=PIPE).communicate(input=inp_bytes)[0].decode()
-    if not sel.strip():
+    if not sel.rstrip():
         sys.exit()
-    return sel.strip()
+    return sel.rstrip()
 
 
 def toggle_existing(conn):
@@ -288,11 +289,8 @@ def set_new_connection(ssid, pw):
     # "Error: Failed to add/activate new connection: Unknown error", which
     # doesn't always mean the connection failed, so test for 'activated' or
     # 'activating' in the connection status as well
-    status = ["nmcli", "-t", "-f", "GENERAL", "connection", "show", ssid]
-    active = Popen(status, stdout=PIPE).communicate()[0]
     # Delete connections with errors
-    if "Error" in res and \
-            ('activating' not in active or 'activated' not in active):
+    if "activated" not in res:
         delete = ["nmcli", "connection", "delete", ssid]
         Popen(delete, stdout=PIPE).communicate()
 
@@ -313,9 +311,9 @@ def run():
         sys.exit()
     elif sel in ssids:
         # Set ssid, security if selection is an SSID
-        ssid, security = sel.split(":")
-        ssid = ssid.strip("'").strip().replace("**", "")
+        ssid, security = [i for i in  sel.strip().rsplit('  ') if i != ''][-3:-1]
         security = security.strip()
+        ssid = ssid.strip()
     elif sel.replace(":VPN", "").replace("**", "") in vpns:
         # Select VPN connection (sel="pia_us_west:VPN")
         ssid = sel.replace(":VPN", "").replace("**", "")
@@ -325,7 +323,7 @@ def run():
     if ssid in [i.split(':')[0] for i in conns if i]:
         toggle_existing(ssid)
     else:
-        if security:
+        if security != '--':
             pw = get_passphrase()
         else:
             pw = ""
