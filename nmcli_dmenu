@@ -218,7 +218,7 @@ def toggle_existing(conn):
     Args: conn - string
 
     """
-    conn_status = ["nmcli", "-t", "-f", "GENERAL", "connection", "show", conn]
+    conn_status = ["nmcli", "-t", "-f", "GENERAL.STATE", "connection", "show", conn]
     res = Popen(conn_status, stdout=PIPE, env=ENV).communicate()[0]
     if 'activated' not in res.decode():
         updown = 'up'
@@ -288,14 +288,14 @@ def set_new_connection(ssid, pw):
     """
     pw = str(pw).strip()
     new_conn = ["nmcli", "device", "wifi", "connect", ssid, "password", pw]
-    res = Popen(new_conn, stdout=PIPE).communicate()
+    res = Popen(new_conn, stdout=PIPE,env=ENV).communicate()
     # Delete connection if it fails somehow.
     # With nmcli 0.9.10, you occasionally get an error message:
     # "Error: Failed to add/activate new connection: Unknown error", which
     # doesn't always mean the connection failed, so test for 'activated' or
     # 'activating' in the connection status as well
     # Delete connections with errors
-    if "activated" not in res:
+    if "activated" not in res[0].decode():
         delete = ["nmcli", "connection", "delete", ssid]
         Popen(delete, stdout=PIPE).communicate()
 
