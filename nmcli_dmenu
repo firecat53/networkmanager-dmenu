@@ -276,8 +276,18 @@ def get_passphrase():
     Returns: string
 
     """
-    return Popen(dmenu_cmd(0, "Passphrase"),
-                 stdin=PIPE, stdout=PIPE).communicate()[0].decode()
+
+    conf = configparser.ConfigParser()
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
+    pinentry = conf.get("dmenu","pinentry")
+    if pinentry:
+        s = Popen(pinentry, stdout=PIPE, stdin=PIPE)
+        out = s.communicate(input=b'setdesc Get network password\ngetpin\n')[0]
+        pin = out.decode().split("\n")[2].split("D ")[1]
+        return pin
+    else:
+        return Popen(dmenu_cmd(0, "Passphrase"),
+                    stdin=PIPE, stdout=PIPE).communicate()[0].decode()
 
 
 def set_new_connection(ssid, pw):
