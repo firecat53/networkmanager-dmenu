@@ -12,6 +12,7 @@ Add dmenu formatting options and default terminal if desired to
 
 """
 import itertools
+import locale
 import os
 from os.path import expanduser
 from subprocess import Popen, PIPE
@@ -23,6 +24,7 @@ except ImportError:
 
 ENV = os.environ.copy()
 ENV['LC_ALL'] = 'C'
+ENC = locale.getpreferredencoding()
 
 
 def dmenu_cmd(num_lines, prompt="Networks"):
@@ -71,15 +73,16 @@ def choose_adapter():
 
     """
     adps = ["nmcli", "device", "status"]
-    a = Popen(adps, stdout=PIPE, env=ENV).communicate()[0].decode().split('\n')
+    a = Popen(adps, stdout=PIPE,
+              env=ENV).communicate()[0].decode(ENC).split('\n')
     all_adps = [i.split()[0] for i in a if 'wifi' in i]
     if len(all_adps) <= 1:
         return all_adps[0].strip()
-    all_adps_bytes = "\n".join(all_adps).encode()
+    all_adps_bytes = "\n".join(all_adps).encode(ENC)
     sel = Popen(dmenu_cmd(len(all_adps), "CHOOSE ADAPTER:"),
                 stdin=PIPE,
                 stdout=PIPE,
-                env=ENV).communicate(input=all_adps_bytes)[0].decode()
+                env=ENV).communicate(input=all_adps_bytes)[0].decode(ENC)
     if not sel.strip():
         sys.exit()
     return sel.strip()
@@ -92,7 +95,7 @@ def current_conns():
 
     """
     conns = ["nmcli", "-t", "-f", "name,type", "connection"]
-    return Popen(conns, stdout=PIPE).communicate()[0].decode().split('\n')
+    return Popen(conns, stdout=PIPE).communicate()[0].decode(ENC).split('\n')
 
 
 def current_ssids(adapter):
@@ -105,7 +108,8 @@ def current_ssids(adapter):
     """
     scan = ["nmcli", "-p", "-f", "in-use,ssid,security,bars,signal", "device",
             "wifi", "list", "ifname", adapter]
-    res = Popen(scan, stdout=PIPE).communicate()[0].decode().split("\n")[5:-1]
+    res = Popen(scan,
+                stdout=PIPE).communicate()[0].decode(ENC).split("\n")[5:-1]
     res = [i.rstrip().rsplit(' ', 1) for i in res]
     res = sorted(res, key=lambda x: int(x[1]), reverse=True)
     res = unique_ssid(res)
@@ -148,7 +152,7 @@ def get_network_status():
     """
     stat = ["nmcli", "networking"]
     res = Popen(stat, stdout=PIPE, env=ENV).communicate()[0]
-    if 'enabled' in res.decode():
+    if 'enabled' in res.decode(ENC):
         return 'Disable'
     else:
         return 'Enable'
@@ -163,7 +167,7 @@ def get_active_connections():
     status = ["nmcli", "-t", "-f", "name", "connection",
               "show", "--active"]
     active = Popen(status, stdout=PIPE).communicate()[0]
-    active = active.decode().split('\n')
+    active = active.decode(ENC).split('\n')
     del active[-1]
     return active
 
@@ -204,10 +208,10 @@ def get_selection(ssids, vpns, other):
     vpns = ["{}:VPN".format(i) for i in vpns]
     inp = ssids + [""] + \
         mark_active(vpns, active) + [""] + other
-    inp_bytes = "\n".join(inp).encode()
+    inp_bytes = "\n".join(inp).encode(ENC)
     sel = Popen(dmenu_cmd(32),
                 stdin=PIPE,
-                stdout=PIPE).communicate(input=inp_bytes)[0].decode()
+                stdout=PIPE).communicate(input=inp_bytes)[0].decode(ENC)
     if not sel.rstrip():
         sys.exit()
     return sel.rstrip()
@@ -223,7 +227,7 @@ def toggle_existing(conn):
     conn_status = ["nmcli", "-t", "-f", "GENERAL.STATE",
                    "connection", "show", conn]
     res = Popen(conn_status, stdout=PIPE, env=ENV).communicate()[0]
-    if 'activated' not in res.decode():
+    if 'activated' not in res.decode(ENC):
         updown = 'up'
     else:
         updown = 'down'
@@ -291,13 +295,13 @@ def get_passphrase():
         s = Popen(pinentry, stdout=PIPE, stdin=PIPE)
         out = s.communicate(input=b'setdesc Get network password\ngetpin\n')[0]
         if out:
-            res = out.decode().split("\n")[2]
+            res = out.decode(ENC).split("\n")[2]
             if res.startswith("D "):
                 pin = res.split("D ")[1]
         return pin
     else:
         return Popen(dmenu_cmd(0, "Passphrase"),
-                     stdin=PIPE, stdout=PIPE).communicate()[0].decode()
+                     stdin=PIPE, stdout=PIPE).communicate()[0].decode(ENC)
 
 
 def set_new_connection(ssid, pw):
@@ -316,7 +320,7 @@ def set_new_connection(ssid, pw):
     # doesn't always mean the connection failed, so test for 'activated' or
     # 'activating' in the connection status as well
     # Delete connections with errors
-    if "activated" not in res[0].decode():
+    if "activated" not in res[0].decode(ENC):
         delete = ["nmcli", "connection", "delete", ssid]
         Popen(delete, stdout=PIPE).communicate()
 
