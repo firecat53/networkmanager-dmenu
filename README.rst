@@ -12,6 +12,7 @@ Features
 - Enable/Disable networking
 - Launch nm-connection-editor GUI
 - Support for multiple wifi adapters
+- Optional Pinentry support for secure passphrase entry
 
 License
 -------
@@ -25,6 +26,7 @@ Requirements
 2. NetworkManager
 3. Dmenu. Basic support is included for Rofi_, but most Rofi configuration/theming should be done via Xresources.
 4. (optional) The network-manager-applet package (in order to launch the GUI connection editor, if desired. The nm-applet does _not_ need to be started.)
+5. (optional) Pinentry. Make sure to set which flavor of pinentry command to use in the config file.
 
 Installation
 ------------

@@ -9,6 +9,7 @@ fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # b =  (just set to empty value and menu will appear at the bottom
 # m = number of monitor to display on
 # p = Custom Prompt for the networks menu
+# pinentry = Pinentry command
 
 [editor]
 terminal = urxvtc

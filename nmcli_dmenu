@@ -57,6 +57,8 @@ def dmenu_cmd(num_lines, prompt="Networks"):
             lines = "-dmenu -lines"
         else:
             lines = "-i -l"
+        if "pinentry" in args_dict:
+            del args_dict["pinentry"]
         extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
         res = [dmenu_command, str(num_lines), "-p", str(prompt)] \
             + list(itertools.chain.from_iterable(extras))
@@ -276,8 +278,26 @@ def get_passphrase():
     Returns: string
 
     """
-    return Popen(dmenu_cmd(0, "Passphrase"),
-                 stdin=PIPE, stdout=PIPE).communicate()[0].decode()
+
+    conf = configparser.ConfigParser()
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
+    pinentry = None
+    try:
+        pinentry = conf.get("dmenu", "pinentry")
+    except configparser.NoOptionError:
+        pass
+    if pinentry:
+        pin = ""
+        s = Popen(pinentry, stdout=PIPE, stdin=PIPE)
+        out = s.communicate(input=b'setdesc Get network password\ngetpin\n')[0]
+        if out:
+            res = out.decode().split("\n")[2]
+            if res.startswith("D "):
+                pin = res.split("D ")[1]
+        return pin
+    else:
+        return Popen(dmenu_cmd(0, "Passphrase"),
+                     stdin=PIPE, stdout=PIPE).communicate()[0].decode()
 
 
 def set_new_connection(ssid, pw):
