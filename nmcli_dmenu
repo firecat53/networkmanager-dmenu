@@ -48,7 +48,9 @@ def dmenu_cmd(num_lines, prompt="Networks"):
     else:
         args_dict = dict(args)
         if "dmenu_command" in args_dict:
-            dmenu_command = args_dict["dmenu_command"]
+            command = args_dict["dmenu_command"].split(" ",1)
+            dmenu_command = command[0]
+            rest = command[-1] if len(command) > 1 else ""
             del args_dict["dmenu_command"]
         if "p" in args_dict and prompt == "Networks":
             prompt = args_dict["p"]
@@ -62,7 +64,7 @@ def dmenu_cmd(num_lines, prompt="Networks"):
         if "pinentry" in args_dict:
             del args_dict["pinentry"]
         extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-        res = [dmenu_command, str(num_lines), "-p", str(prompt)] \
+        res = [dmenu_command, rest, str(num_lines), "-p", str(prompt)] \
             + list(itertools.chain.from_iterable(extras))
         res[1:1] = lines.split()
     return res
