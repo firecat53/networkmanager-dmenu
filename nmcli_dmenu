@@ -223,10 +223,10 @@ def get_selection(ssids, vpns, gsms, other):
     """
     active = get_active_connections()
     vpns = ["{}:VPN".format(i) for i in vpns]
+    vpns = mark_active(vpns, active) + [""] if vpns else []
     gsms = ["{}:GSM".format(i) for i in gsms]
-    inp = ssids + [""] + \
-        mark_active(vpns, active) + [""] + \
-        mark_active(gsms, active) + [""] + other
+    gsms = mark_active(gsms, active) + [""] if gsms else []
+    inp = ssids + [""] + vpns + gsms + other
     inp_bytes = "\n".join(inp).encode(ENC)
     sel = Popen(dmenu_cmd(len(inp)),
                 stdin=PIPE,
