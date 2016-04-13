@@ -174,6 +174,20 @@ def get_network_status():
         return 'Enable'
 
 
+def get_wifi_status():
+    """Get current status of Wifi
+
+    Returns: string 'Enable' or 'Disable',
+
+    """
+    stat = ["nmcli", "r", "wifi"]
+    res = Popen(stat, stdout=PIPE, env=ENV).communicate()[0]
+    if 'enabled' in res.decode(ENC):
+        return 'Disable'
+    else:
+        return 'Enable'
+
+
 def get_active_connections():
     """Get currently active connections
 
@@ -207,7 +221,8 @@ def other_actions():
     """Return list of other actions that can be taken
 
     """
-    return ["{} Networking".format(get_network_status()),
+    return ["{} Wifi".format(get_wifi_status()),
+            "{} Networking".format(get_network_status()),
             "Launch Connection Manager"]
 
 
@@ -265,6 +280,20 @@ def toggle_networking(sel):
     else:
         updown = 'off'
     net = ["nmcli", "networking", updown]
+    Popen(net, stdout=PIPE, env=ENV).communicate()
+
+
+def toggle_wifi(sel):
+    """Enable/disable Wifi
+
+    Args: sel - string ('Enable Wifi' or 'Disable Wifi')
+
+    """
+    if sel.startswith('Enable'):
+        updown = 'on'
+    else:
+        updown = 'off'
+    net = ["nmcli", "r", "wifi", updown]
     Popen(net, stdout=PIPE, env=ENV).communicate()
 
 
@@ -356,6 +385,8 @@ def run():
         # Parse other actions
         if 'Networking' in sel:
             toggle_networking(sel)
+        elif 'Wifi' in sel:
+            toggle_wifi(sel)
         elif 'Launch' in sel:
             launch_connection_editor()
         sys.exit()
