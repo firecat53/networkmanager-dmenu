@@ -111,10 +111,10 @@ def current_ssids(adapter):
         ["firecat4153:WPA2","firecat4153-guest:", "firecat4153x:WPA2"]
 
     """
-    scan = ["nmcli", "-p", "-f", "in-use,ssid,security,bars,signal", "device",
+    scan = ["nmcli", "-f", "in-use,ssid,security,bars,signal", "device",
             "wifi", "list", "ifname", adapter]
     res = Popen(scan,
-                stdout=PIPE).communicate()[0].decode(ENC).split("\n")[5:-1]
+                stdout=PIPE).communicate()[0].decode(ENC).split("\n")[2:-1]
     res = [i.rstrip().rsplit(' ', 1) for i in res]
     res = sorted(res, key=lambda x: int(x[1]), reverse=True)
     res = unique_ssid(res)
