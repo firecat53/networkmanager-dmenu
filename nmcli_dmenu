@@ -86,7 +86,9 @@ def choose_adapter(client):
     """
     devices = client.get_devices()
     devices = list(filter(lambda d: d.get_device_type() == NM.DeviceType.WIFI, devices))
-    if len(devices) <= 1:
+    if len(devices) == 0:
+        return None
+    elif len(devices) == 1:
         return devices[0]
     device_names = "\n".join([d.get_iface() for d in devices]).encode(ENC)
     sel = Popen(dmenu_cmd(len(devices), "CHOOSE ADAPTER:"),
@@ -229,7 +231,7 @@ def create_gsm_actions(gsms, active):
 
 
 
-def get_selection(client, adapter, aps, vpns, gsms, others):
+def get_selection(client, aps, vpns, gsms, others):
     """Combine the arg lists and send to dmenu for selection.
     Also executes the associated action.
 
@@ -243,7 +245,9 @@ def get_selection(client, adapter, aps, vpns, gsms, others):
     formated_gsms = [str(gsm) for gsm in gsms]
     formated_others = [str(other) for other in others]
 
-    inp = formated_aps + [""]
+    inp = []
+    if formated_aps:
+        inp += formated_aps + [""]
     if vpns:
         inp += formated_vpns + [""]
     if gsms:
@@ -376,22 +380,25 @@ def set_new_connection(ssid, pw):
 
 def run():
     adapter = choose_adapter(client)
-
     conns = client.get_connections()
+
+    if adapter:
+        aps = sorted(adapter.get_access_points(),
+                     key=lambda a: a.get_strength(), reverse=True) active_ap = adapter.get_active_access_point()
+        ap_actions = create_ap_actions(aps, active_ap, conns)
+    else:
+        ap_actions = []
+
+    active = client.get_active_connections()
 
     vpns = list(filter(lambda c: c.is_type(NM.SETTING_VPN_SETTING_NAME), conns))
     gsms = list(filter(lambda c: c.is_type(NM.SETTING_GSM_SETTING_NAME), conns))
 
-    aps = sorted(adapter.get_access_points(), key=lambda a: a.get_strength(), reverse=True)
-    other_actions = create_other_actions(client)
-
-    active = client.get_active_connections()
-    active_ap = adapter.get_active_access_point()
-
-    ap_actions = create_ap_actions(aps, active_ap, conns)
     vpn_actions = create_vpn_actions(vpns, active)
     gsm_actions = create_gsm_actions(gsms, active)
-    sel = get_selection(client, adapter, ap_actions, vpn_actions,
+    other_actions = create_other_actions(client)
+
+    sel = get_selection(client, ap_actions, vpn_actions,
                         gsm_actions, other_actions)
     sel()
 
@@ -399,4 +406,4 @@ def run():
 if __name__ == '__main__':
     run()
 
-# vim: set et :
+# vim: set et ts=4 sw=4 :
