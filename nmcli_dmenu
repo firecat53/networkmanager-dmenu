@@ -174,32 +174,32 @@ class Action(object):
             self.f(*self.args)
 
 
-def process_ap(ap):
-    is_existing = len(ap.filter_connections(conns)) > 0
-    if is_existing:
-        toggle_existing(ssid_to_utf8(ap))
+def process_ap(ap, is_active):
+    if is_active:
+        client.deactivate_connection_async(ap)
     else:
-        if ap_security(ap) != "--":
-            password = get_passphrase()
+        con = ap.filter_connections(conns)
+        if len(con) > 1:
+            raise ValueError("There are multiple connections possible")
+
+        if len(con) == 1:
+            client.activate_connection_async(con[0])
         else:
-            password = ""
-        set_new_connection(ssid_to_utf8(ap), password)
+            if ap_security(ap) != "--":
+                password = get_passphrase()
+            else:
+                password = ""
+            set_new_connection(ssid_to_utf8(ap), password)
 
 
-def process_vpn(vpn, activate):
-    print("Processing VPN: %s" % vpn.get_id())
+def process_vpngsm(con, activate):
     if activate:
-        client.activate_connection_async(vpn)
+        client.activate_connection_async(con)
     else:
-        client.deactivate_connection_async(vpn)
+        client.deactivate_connection_async(con)
 
 
-def process_gsm(gsm):
-    print("Processing GSM: %s" % gsm.get_id())
-    toggle_existing(gsm.get_id())
-
-
-def create_ap_actions(aps, active_ap):
+def create_ap_actions(aps, active_ap, active_connection):
     active_ap_bssid = active_ap.get_bssid() if active_ap is not None else ""
 
     names = [ssid_to_utf8(ap) for ap in aps]
@@ -211,41 +211,52 @@ def create_ap_actions(aps, active_ap):
 
     for ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(ap.get_strength())
-        active_flag = "**" if ap.get_bssid() == active_ap_bssid else "  "
-        ap_actions.append(Action("{} {:<{}s}  {:<{}s}  {}".format(active_flag,
-                          name, max_len_name, sec, max_len_sec, bars),
-                          process_ap, ap))
+        is_active = ap.get_bssid() == active_ap_bssid
+        active_flag = "**" if is_active else "  "
+        action_name = "{} {:<{}s}  {:<{}s}  {}".format(active_flag, name,
+                                                       max_len_name, sec,
+                                                       max_len_sec, bars)
+        if is_active:
+            ap_actions.append(Action(action_name, process_ap,
+                                     [active_connection, True]))
+        else:
+            ap_actions.append(Action(action_name, process_ap, [ap, False]))
     return ap_actions
 
 
 def create_vpn_actions(vpns, active):
-    active_vpn_ids = [a.get_id() for a in active if a.get_vpn()]
-    actions = []
-    for vpn in vpns:
-        is_active = vpn.get_id() in active_vpn_ids
-        active_flag = "**" if is_active else "  "
-        action_name = "{} {}:VPN".format(active_flag, vpn.get_id())
-        if is_active:
-            active_connection = [a for a in active
-                                 if a.get_id() == vpn.get_id()]
-            assert len(active_connection) == 1
-            active_connection = active_connection[0]
-            actions.append(Action(action_name, process_vpn,
-                                  [active_connection, False]))
-        else:
-            actions.append(Action(action_name, process_vpn, [vpn, True]))
-    return actions
+    active_vpns = list(filter(lambda a: a.get_vpn(), active))
+    return _create_vpngsm_actions(vpns, active_vpns, "VPN")
 
 
 # TODO: Test this
 def create_gsm_actions(gsms, active):
-    active_gsm_ids = [a.get_id() for a in active if
-                      a.get_connection().is_type(NM.SETTING_GSM_SETTING_NAME)]
-    active_flags = ["**" if (gsm.get_id() in active_gsm_ids) else
-                    "  " for gsm in gsms]
-    return [Action("{} {}:GSM".format(active_flag, gsm.get_id()),
-                   process_gsm, gsm) for active_flag, gsm in
-            zip(active_flags, gsms)]
+    active_gsms = list(filter(lambda a: a.get_connection()
+                              .is_type(NM.SETTING_GSM_SETTING_NAME), active))
+    return _create_vpngsm_actions(gsms, active_gsms, "GSM")
+
+
+def _create_vpngsm_actions(cons, active_cons, label):
+    active_con_ids = [a.get_id() for a in active_cons]
+    actions = []
+    for con in cons:
+        is_active = con.get_id() in active_con_ids
+        active_flag = "**" if is_active else "  "
+        action_name = "{} {}:{}".format(active_flag, con.get_id(), label)
+        if is_active:
+            active_connection = [a for a in active_cons
+                                 if a.get_id() == con.get_id()]
+            if len(active_connection) != 1:
+                raise ValueError("Multiple active connections match"
+                                 " the connection: %s" % con.get_id())
+            active_connection = active_connection[0]
+
+            actions.append(Action(action_name, process_vpngsm,
+                                  [active_connection, False]))
+        else:
+            actions.append(Action(action_name, process_vpngsm,
+                                  [con, True]))
+    return actions
 
 
 def get_selection(client, aps, vpns, gsms, others):
@@ -282,24 +293,6 @@ def get_selection(client, aps, vpns, gsms, others):
                          aps + vpns + gsms + others))
     assert len(action) == 1, "Selection was ambiguous: %s" % str(sel)
     return action[0]
-
-
-def toggle_existing(conn):
-    """Get conn status, then toggle connection up or down if it's not
-    'activated'
-
-    Args: conn - string
-
-    """
-    conn_status = ["nmcli", "-t", "-f", "GENERAL.STATE",
-                   "connection", "show", conn]
-    res = Popen(conn_status, stdout=PIPE, env=ENV).communicate()[0]
-    if 'activated' not in res.decode(ENC):
-        updown = 'up'
-    else:
-        updown = 'down'
-    conn_string = ["nmcli", "connection", updown, "id", conn]
-    Popen(conn_string, stdout=PIPE, env=ENV).communicate()
 
 
 def toggle_networking(enable):
@@ -397,17 +390,24 @@ def set_new_connection(ssid, pw):
 
 
 def run():
+    active = client.get_active_connections()
+
     adapter = choose_adapter(client)
 
     if adapter:
         aps = sorted(adapter.get_access_points(),
                      key=lambda a: a.get_strength(), reverse=True)
         active_ap = adapter.get_active_access_point()
-        ap_actions = create_ap_actions(aps, active_ap)
+        active_ap_con = list(filter(lambda con: con.get_connection_type() ==
+                                    NM.SETTING_WIRELESS_SETTING_NAME, active))
+        print(active_ap_con)
+        if len(active_ap_con) > 1:
+            raise ValueError("Multiple connections match"
+                             " the wireless connection")
+        active_ap_con = active_ap_con[0] if active_ap_con else None
+        ap_actions = create_ap_actions(aps, active_ap, active_ap_con)
     else:
         ap_actions = []
-
-    active = client.get_active_connections()
 
     vpns = list(filter(lambda c: c.is_type(NM.SETTING_VPN_SETTING_NAME),
                        conns))
