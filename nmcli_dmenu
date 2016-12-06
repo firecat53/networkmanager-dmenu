@@ -54,6 +54,10 @@ def dmenu_cmd(num_lines, prompt="Networks"):
             dmenu_command = command[0]
             dmenu_args = command[1:]
             del args_dict["dmenu_command"]
+        if "lines" in args_dict:
+            if int(args_dict["lines"]) < num_lines:
+                num_lines = args_dict["lines"]
+            del args_dict["lines"]
         if "p" in args_dict and prompt == "Networks":
             prompt = args_dict["p"]
             del args_dict["p"]

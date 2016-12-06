@@ -3,6 +3,7 @@ fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # dmenu_command = /usr/bin/dmenu
 # # Note that dmenu_command can contain arguments as well like `rofi -width 30`
 # # Rofi and dmenu are set to case insensitive by default `-i`
+# lines = number of lines to display, defaults to number of total network options
 # fn = font string
 # nb = normal background (name, #RGB, or #RRGGBB)
 # nf = normal foreground
