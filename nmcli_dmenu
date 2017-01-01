@@ -120,7 +120,7 @@ def current_ssids(adapter):
     res = [i.rstrip().rsplit(' ', 1) for i in res]
     res = sorted(res, key=lambda x: int(x[1]), reverse=True)
     res = unique_ssid(res)
-    return [i[0].replace("'", "").rstrip() for i in res] + [""]
+    return [i[0].replace("'", "").rstrip() for i in res] + [" "]
 
 
 def unique_ssid(conns):
@@ -240,9 +240,9 @@ def get_selection(ssids, vpns, gsms, other):
     """
     active = get_active_connections()
     vpns = ["{}:VPN".format(i) for i in vpns]
-    vpns = mark_active(vpns, active) + [""] if vpns else []
+    vpns = mark_active(vpns, active) + [" "] if vpns else []
     gsms = ["{}:GSM".format(i) for i in gsms]
-    gsms = mark_active(gsms, active) + [""] if gsms else []
+    gsms = mark_active(gsms, active) + [" "] if gsms else []
     inp = ssids + vpns + gsms + other
     inp_bytes = "\n".join(inp).encode(ENC)
     sel = Popen(dmenu_cmd(len(inp)),
