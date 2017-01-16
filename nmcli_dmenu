@@ -61,12 +61,24 @@ def dmenu_cmd(num_lines, prompt="Networks"):
             del args_dict["p"]
         if "rofi" in dmenu_command:
             lines = "-i -dmenu -lines"
+            # rofi doesn't support 0 length line, it requires at least -lines=1
+            # see https://github.com/DaveDavenport/rofi/issues/252
+            num_lines = num_lines or 1
         else:
             lines = "-i -l"
+        if "l" in args_dict:
+            # rofi doesn't support 0 length line, it requires at least -lines=1
+            # see https://github.com/DaveDavenport/rofi/issues/252
+            if "rofi" in dmenu_command:
+                args_dict['l'] = min(num_lines, int(args_dict['l'])) or 1
+            lines = "{} {}".format(lines, args_dict['l'])
+            del args_dict['l']
+        else:
+            lines = "{} {}".format(lines, num_lines)
         if "pinentry" in args_dict:
             del args_dict["pinentry"]
         extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-        res = [dmenu_command, str(num_lines), "-p", str(prompt)]
+        res = [dmenu_command, "-p", str(prompt)]
         res.extend(dmenu_args)
         res += list(itertools.chain.from_iterable(extras))
         res[1:1] = lines.split()
