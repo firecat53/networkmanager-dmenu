@@ -259,7 +259,7 @@ def _create_vpngsm_actions(cons, active_cons, label):
                                  if a.get_id() == con.get_id()]
             if len(active_connection) != 1:
                 raise ValueError("Multiple active connections match"
-                                 " the connection: %s" % con.get_id())
+                                 " the connection: {}".format(con.get_id()))
             active_connection = active_connection[0]
 
             actions.append(Action(action_name, process_vpngsm,
@@ -406,8 +406,15 @@ def run():
     adapter = choose_adapter(client)
 
     if adapter:
-        aps = sorted(adapter.get_access_points(),
-                     key=lambda a: a.get_strength(), reverse=True)
+        aps = []
+        ap_names = []
+        aps_all = sorted(adapter.get_access_points(),
+                         key=lambda a: a.get_strength(), reverse=True)
+        for ap in aps_all:
+            # Remove duplicate AP names, keeping strongest ones
+            if ssid_to_utf8(ap) not in ap_names:
+                aps.append(ap)
+                ap_names.append(ssid_to_utf8(ap))
         active_ap = adapter.get_active_access_point()
         active_ap_con = [i for i in active if
                          i.get_connection_type() ==
