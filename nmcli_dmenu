@@ -18,6 +18,7 @@ import locale
 import os
 import shlex
 import sys
+import uuid
 from os.path import expanduser
 from subprocess import Popen, PIPE
 
@@ -185,7 +186,7 @@ class Action(object):
             self.f(*self.args)
 
 
-def process_ap(ap, is_active):
+def process_ap(ap, is_active, adapter):
     if is_active:
         client.deactivate_connection_async(ap)
     else:
@@ -200,7 +201,7 @@ def process_ap(ap, is_active):
                 password = get_passphrase()
             else:
                 password = ""
-            set_new_connection(ssid_to_utf8(ap), password)
+            set_new_connection(ap, password, adapter)
 
 
 def process_vpngsm(con, activate):
@@ -210,7 +211,7 @@ def process_vpngsm(con, activate):
         client.deactivate_connection_async(con)
 
 
-def create_ap_actions(aps, active_ap, active_connection):
+def create_ap_actions(aps, active_ap, active_connection, adapter):
     active_ap_bssid = active_ap.get_bssid() if active_ap is not None else ""
 
     names = [ssid_to_utf8(ap) for ap in aps]
@@ -229,9 +230,10 @@ def create_ap_actions(aps, active_ap, active_connection):
                                                        max_len_sec, bars)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
-                                     [active_connection, True]))
+                                     [active_connection, True, adapter]))
         else:
-            ap_actions.append(Action(action_name, process_ap, [ap, False]))
+            ap_actions.append(Action(action_name, process_ap,
+                                     [ap, False, adapter]))
     return ap_actions
 
 
@@ -379,25 +381,61 @@ def get_passphrase():
                      stdin=PIPE, stdout=PIPE).communicate()[0].decode(ENC)
 
 
-def set_new_connection(ssid, pw):
+def set_new_connection(ap, pw, adapter):
     """Setup a new NetworkManager connection
 
-    Args: ssid - string
+    Args: ap - NM.AccessPoint
           pw - string
 
     """
     pw = str(pw).strip()
-    new_conn = ["nmcli", "device", "wifi", "connect", ssid, "password", pw]
-    res = Popen(new_conn, stdout=PIPE, env=ENV).communicate()
-    # Delete connection if it fails somehow.
-    # With nmcli 0.9.10, you occasionally get an error message:
-    # "Error: Failed to add/activate new connection: Unknown error", which
-    # doesn't always mean the connection failed, so test for 'activated' or
-    # 'activating' in the connection status as well
-    # Delete connections with errors
-    if "activated" not in res[0].decode(ENC):
-        delete = ["nmcli", "connection", "delete", ssid]
-        Popen(delete, stdout=PIPE).communicate()
+    profile = create_wifi_profile(ap, pw)
+    client.add_and_activate_connection_async(profile, adapter, ap.get_path(),
+                                             None, None, None)
+
+
+def create_wifi_profile(ap, password):
+    # From https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/gi/add_connection.py
+    # and https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/dbus/add-wifi-psk-connection.py
+    ap_sec = ap_security(ap)
+    profile = NM.SimpleConnection.new()
+
+    s_con = NM.SettingConnection.new()
+    s_con.set_property(NM.SETTING_CONNECTION_ID, ssid_to_utf8(ap))
+    s_con.set_property(NM.SETTING_CONNECTION_UUID, str(uuid.uuid4()))
+    s_con.set_property(NM.SETTING_CONNECTION_TYPE, "802-11-wireless")
+    profile.add_setting(s_con)
+
+    s_wifi = NM.SettingWireless.new()
+    s_wifi.set_property(NM.SETTING_WIRELESS_SSID, ap.get_ssid())
+    s_wifi.set_property(NM.SETTING_WIRELESS_MODE, 'infrastructure')
+    profile.add_setting(s_wifi)
+
+    s_ip4 = NM.SettingIP4Config.new()
+    s_ip4.set_property(NM.SETTING_IP_CONFIG_METHOD, "auto")
+    profile.add_setting(s_ip4)
+
+    s_ip6 = NM.SettingIP6Config.new()
+    s_ip6.set_property(NM.SETTING_IP_CONFIG_METHOD, "auto")
+    profile.add_setting(s_ip6)
+
+    if ap_sec != "--":
+        s_wifi_sec = NM.SettingWirelessSecurity.new()
+        if "WPA" in ap_sec:
+            s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_KEY_MGMT,
+                                    "wpa-psk")
+            s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_AUTH_ALG,
+                                    "open")
+            s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_PSK, password)
+        elif "WEP" in ap_sec:
+            s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_KEY_MGMT,
+                                    "None")
+            s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_WEP_KEY_TYPE,
+                                    NM.WepKeyType.PASSPHRASE)
+            s_wifi_sec.set_wep_key(0, password)
+        profile.add_setting(s_wifi_sec)
+
+    return profile
 
 
 def run():
@@ -423,7 +461,7 @@ def run():
             raise ValueError("Multiple connections match"
                              " the wireless connection")
         active_ap_con = active_ap_con[0] if active_ap_con else None
-        ap_actions = create_ap_actions(aps, active_ap, active_ap_con)
+        ap_actions = create_ap_actions(aps, active_ap, active_ap_con, adapter)
     else:
         ap_actions = []
 
