@@ -23,7 +23,7 @@ from os.path import expanduser
 from subprocess import Popen, PIPE
 
 gi.require_version('NM', '1.0')
-from gi.repository import NM
+from gi.repository import GLib, NM
 
 try:
     import configparser as configparser
@@ -35,6 +35,7 @@ ENV['LC_ALL'] = 'C'
 ENC = locale.getpreferredencoding()
 
 client = NM.Client.new(None)
+loop = GLib.MainLoop()
 conns = client.get_connections()
 
 
@@ -391,7 +392,8 @@ def set_new_connection(ap, pw, adapter):
     pw = str(pw).strip()
     profile = create_wifi_profile(ap, pw)
     client.add_and_activate_connection_async(profile, adapter, ap.get_path(),
-                                             None, None, None)
+                                             None, verify_conn, profile)
+    loop.run()
 
 
 def create_wifi_profile(ap, password):
@@ -436,6 +438,26 @@ def create_wifi_profile(ap, password):
         profile.add_setting(s_wifi_sec)
 
     return profile
+
+
+def verify_conn(client, result, data):
+    """Callback function for add_and_activate_connection_async
+
+    Check if connection completes successfully. Delete the connection if there
+    is an error.
+
+    """
+    try:
+        act_conn = client.add_and_activate_connection_finish(result)
+        conn = act_conn.get_connection()
+        conn.verify()
+        conn.verify_secrets()
+        data.verify()
+        data.verify_secrets()
+    except GLib.Error:
+        conn.delete()
+    finally:
+        loop.quit()
 
 
 def run():
