@@ -460,30 +460,44 @@ def verify_conn(client, result, data):
         loop.quit()
 
 
+def create_ap_list(adapter):
+    """Generate list of access points. Remove duplicate APs , keeping strongest
+    ones and the active AP
+
+    Args: adapter
+    Returns: aps - list of access points
+             active_ap - active AP
+             active_ap_con - active Connection
+             adapter
+
+    """
+    aps = []
+    ap_names = []
+    active_ap = adapter.get_active_access_point()
+    aps_all = sorted(adapter.get_access_points(),
+                     key=lambda a: a.get_strength(), reverse=True)
+    active_ap_con = active_ap.filter_connections(conns)
+    if len(active_ap_con) > 1:
+        raise ValueError("Multiple connection profiles match"
+                         " the wireless AP")
+    active_ap_con = active_ap_con[0] if active_ap_con else None
+    active_ap_name = ssid_to_utf8(active_ap)
+    for ap in aps_all:
+        ap_name = ssid_to_utf8(ap)
+        if ap != active_ap and ap_name == active_ap_name:
+            # Skip adding AP if it's not active but same name as active AP
+            continue
+        if ap_name not in ap_names:
+            ap_names.append(ap_name)
+            aps.append(ap)
+    return aps, active_ap, active_ap_con, adapter
+
+
 def run():
     active = client.get_active_connections()
-
     adapter = choose_adapter(client)
-
     if adapter:
-        aps = []
-        ap_names = []
-        aps_all = sorted(adapter.get_access_points(),
-                         key=lambda a: a.get_strength(), reverse=True)
-        for ap in aps_all:
-            # Remove duplicate AP names, keeping strongest ones
-            if ssid_to_utf8(ap) not in ap_names:
-                aps.append(ap)
-                ap_names.append(ssid_to_utf8(ap))
-        active_ap = adapter.get_active_access_point()
-        active_ap_con = [i for i in active if
-                         i.get_connection_type() ==
-                         NM.SETTING_WIRELESS_SETTING_NAME]
-        if len(active_ap_con) > 1:
-            raise ValueError("Multiple connections match"
-                             " the wireless connection")
-        active_ap_con = active_ap_con[0] if active_ap_con else None
-        ap_actions = create_ap_actions(aps, active_ap, active_ap_con, adapter)
+        ap_actions = create_ap_actions(*create_ap_list(adapter))
     else:
         ap_actions = []
 
