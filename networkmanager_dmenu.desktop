@@ -1,8 +1,8 @@
 [Desktop Entry]
 Categories=Settings;Network;
-Name=nmcli_dmenu
+Name=networkmanager_dmenu
 GenericName=Networkmanager Settings
-Exec=nmcli_dmenu
+Exec=networkmanager_dmenu
 Type=Application
 
 
