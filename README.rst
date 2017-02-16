@@ -1,5 +1,5 @@
-Nmcli-dmenu
-===============
+Networkmanager-dmenu
+====================
 
 Small script to manage NetworkManager connections with dmenu instead of nm-applet
 
@@ -33,13 +33,12 @@ Requirements
 Installation
 ------------
 
-- If using networkmanager < version 0.9.10 you _must_ checkout the 'networkmanager-0.9.8' branch. Some of the nmcli terminology changed with 0.9.10 and is _not_ compatible with previous versions.
 - Set your dmenu_command in config.ini if it's not 'dmenu' (for example dmenu_run or rofi). The alternate command should still respect the -l, -p and -i flags.
 - To customize dmenu appearance, copy config.ini.example to ~/.config/networkmanager-dmenu/config.ini and edit.
 - Set default terminal (xterm, urxvtc, etc.) command in config.ini if desired.
 - If using Rofi, you can try some of the command line options in config.ini or set them using the `dmenu_command` setting, but I haven't tested most of them so I'd suggest configuring via .Xresources where possible. 
 - Copy script somewhere in $PATH
-- If desired, copy the nmcli_dmenu.desktop to /usr/share/applications or ~/.local/share/applications.
+- If desired, copy the networkmanager_dmenu.desktop to /usr/share/applications or ~/.local/share/applications.
 - If you want to run the script as $USER instead of ROOT, set `PolicyKit permissions`_. The script is usable for connecting to pre-existing connections without setting these, but you won't be able to enable/disable networking or add new connections.
 
 OR
