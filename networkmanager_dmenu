@@ -476,12 +476,16 @@ def create_ap_list(adapter):
     active_ap = adapter.get_active_access_point()
     aps_all = sorted(adapter.get_access_points(),
                      key=lambda a: a.get_strength(), reverse=True)
-    active_ap_con = active_ap.filter_connections(conns)
+    try:
+        active_ap_con = active_ap.filter_connections(conns)
+        active_ap_name = ssid_to_utf8(active_ap)
+    except AttributeError:
+        active_ap_name = None
+        active_ap_con = []
     if len(active_ap_con) > 1:
         raise ValueError("Multiple connection profiles match"
                          " the wireless AP")
     active_ap_con = active_ap_con[0] if active_ap_con else None
-    active_ap_name = ssid_to_utf8(active_ap)
     for ap in aps_all:
         ap_name = ssid_to_utf8(ap)
         if ap != active_ap and ap_name == active_ap_name:
