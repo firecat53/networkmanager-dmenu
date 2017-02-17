@@ -130,7 +130,8 @@ def create_other_actions(client):
                    not wifi_enabled),
             Action("{} Networking".format(networking_action),
                    toggle_networking, not networking_enabled),
-            Action("Launch Connection Manager", launch_connection_editor)]
+            Action("Launch Connection Manager", launch_connection_editor),
+            Action("Delete a Connection", delete_connection)]
 
 
 def ssid_to_utf8(ap):
@@ -380,6 +381,23 @@ def get_passphrase():
     else:
         return Popen(dmenu_cmd(0, "Passphrase"),
                      stdin=PIPE, stdout=PIPE).communicate()[0].decode(ENC)
+
+
+def delete_connection():
+    """Display list of NM connections and delete the selected one
+
+    """
+    conn_acts = [Action(i.get_id(), i.delete) for i in conns]
+    conn_names = "\n".join([str(i) for i in conn_acts]).encode(ENC)
+    sel = Popen(dmenu_cmd(len(conn_names), "CHOOSE CONNECTION TO DELETE:"),
+                stdin=PIPE,
+                stdout=PIPE,
+                env=ENV).communicate(input=conn_names)[0].decode(ENC)
+    if not sel.strip():
+        sys.exit()
+    action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
+    assert len(action) == 1, "Selection was ambiguous: {}".format(str(sel))
+    action[0]()
 
 
 def set_new_connection(ap, pw, adapter):

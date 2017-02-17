@@ -14,6 +14,7 @@ Features
 - Launch nm-connection-editor GUI
 - Support for multiple wifi adapters
 - Optional Pinentry support for secure passphrase entry
+- Delete existing connections
 
 License
 -------
@@ -52,10 +53,4 @@ Usage
 
 .. _PolicyKit permissions: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 .. _AUR Package: https://aur.archlinux.org/packages/networkmanager-dmenu-git/
-
-TODO
-----
-
-1. Add ability to delete connections
-
 .. _Rofi: https://davedavenport.github.io/rofi/
