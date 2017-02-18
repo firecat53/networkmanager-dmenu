@@ -389,7 +389,7 @@ def delete_connection():
     """
     conn_acts = [Action(i.get_id(), i.delete) for i in conns]
     conn_names = "\n".join([str(i) for i in conn_acts]).encode(ENC)
-    sel = Popen(dmenu_cmd(len(conn_names), "CHOOSE CONNECTION TO DELETE:"),
+    sel = Popen(dmenu_cmd(len(conn_acts), "CHOOSE CONNECTION TO DELETE:"),
                 stdin=PIPE,
                 stdout=PIPE,
                 env=ENV).communicate(input=conn_names)[0].decode(ENC)
