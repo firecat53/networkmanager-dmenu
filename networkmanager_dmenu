@@ -192,7 +192,11 @@ def process_ap(ap, is_active, adapter):
     if is_active:
         client.deactivate_connection_async(ap)
     else:
-        con = ap.filter_connections(conns)
+        conns_cur = [i for i in conns if
+                     i.get_setting_wireless() is not None and
+                     i.get_setting_wireless().get_mac_address() ==
+                     adapter.get_hw_address()]
+        con = ap.filter_connections(conns_cur)
         if len(con) > 1:
             raise ValueError("There are multiple connections possible")
 
@@ -494,8 +498,12 @@ def create_ap_list(adapter):
     active_ap = adapter.get_active_access_point()
     aps_all = sorted(adapter.get_access_points(),
                      key=lambda a: a.get_strength(), reverse=True)
+    conns_cur = [i for i in conns if
+                 i.get_setting_wireless() is not None and
+                 i.get_setting_wireless().get_mac_address() ==
+                 adapter.get_hw_address()]
     try:
-        active_ap_con = active_ap.filter_connections(conns)
+        active_ap_con = active_ap.filter_connections(conns_cur)
         active_ap_name = ssid_to_utf8(active_ap)
     except AttributeError:
         active_ap_name = None
