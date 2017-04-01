@@ -28,8 +28,9 @@ Requirements
 2. NetworkManager
 3. Dmenu. Basic support is included for Rofi_, but most Rofi configuration/theming should be done via Xresources.
 4. Python gobject (PyGObject, python-gobject, etc.)
-5. (optional) The network-manager-applet package (in order to launch the GUI connection editor, if desired. The nm-applet does _not_ need to be started.)
-6. (optional) Pinentry. Make sure to set which flavor of pinentry command to use in the config file.
+5. (Debian/Ubuntu based distros) libnm-util-dev
+6. (optional) The network-manager-applet package (in order to launch the GUI connection editor, if desired. The nm-applet does _not_ need to be started.)
+7. (optional) Pinentry. Make sure to set which flavor of pinentry command to use in the config file.
 
 Installation
 ------------
