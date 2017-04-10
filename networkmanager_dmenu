@@ -90,7 +90,8 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
             del args_dict["pinentry"]
         if "rofi_highlight" in args_dict:
             if active_lines:
-                dmenu_args.extend(["-a", ",".join([str(num) for num in active_lines])])
+                dmenu_args.extend(["-a", ",".join([str(num)
+                                                   for num in active_lines])])
             del args_dict["rofi_highlight"]
         extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
         res = [dmenu_command, "-p", str(prompt)]
@@ -173,7 +174,7 @@ class Action(object):
                  f,
                  args=None,
                  active=False,
-                 ):
+                ):
         self.name = name
         self.f = f
         self.is_active = active
@@ -240,7 +241,8 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):
                                                     max_len_sec, bars)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
-                                     [active_connection, True, adapter], active=True))
+                                     [active_connection, True, adapter],
+                                     active=True))
         else:
             ap_actions.append(Action(action_name, process_ap,
                                      [ap, False, adapter]))
@@ -310,11 +312,14 @@ def get_selection(client, aps, vpns, gsms, others):
     if rofi_highlight:
         inp = [str(action) for action in all_actions]
     else:
-        inp = [('** ' if action.is_active else '   ') + str(action) for action in all_actions]
-    active_lines = [index for index, action in enumerate(all_actions) if action.is_active]
+        inp = [('** ' if action.is_active else '   ') + str(action)
+               for action in all_actions]
+    active_lines = [index for index, action in enumerate(all_actions)
+                    if action.is_active]
 
     inp_bytes = "\n".join([str(i) for i in inp]).encode(ENC)
-    sel = Popen(dmenu_cmd(len(inp), active_lines=active_lines), stdin=PIPE, stdout=PIPE,
+    command = dmenu_cmd(len(inp), active_lines=active_lines)
+    sel = Popen(command, stdin=PIPE, stdout=PIPE,
                 env=ENV).communicate(input=inp_bytes)[0].decode(ENC)
 
     if not sel.rstrip():
@@ -322,11 +327,14 @@ def get_selection(client, aps, vpns, gsms, others):
 
     if not rofi_highlight:
         action = [i for i in aps + vpns + gsms + others
-                  if prepend_marker_to_active_action(i) == str(sel.rstrip("\n"))]
+                  if ((str(i) == str(sel.rstrip("\n")) and not i.is_active()) or
+                      ('** ' + str(i) == str(sel.rstrip('\n'))
+                       and i.is_active()))]
     else:
         action = [i for i in aps + vpns + gsms + others
                   if str(i) == sel.rstrip("\n")]
-    assert len(action) == 1, "Selection was ambiguous: '{}'".format(str(sel.rstrip("\n")))
+    assert len(action) == 1, \
+            "Selection was ambiguous: '{}'".format(str(sel.rstrip("\n")))
     return action[0]
 
 
