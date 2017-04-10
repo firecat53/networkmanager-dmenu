@@ -12,18 +12,18 @@ Add dmenu formatting options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
-import gi
 import itertools
 import locale
 import os
+from os.path import expanduser
 import shlex
 import sys
 import uuid
-from os.path import expanduser
 from subprocess import Popen, PIPE
 
+import gi
 gi.require_version('NM', '1.0')
-from gi.repository import GLib, NM
+from gi.repository import GLib, NM # pylint: disable=wrong-import-position
 
 try:
     import configparser as configparser
@@ -500,7 +500,7 @@ def verify_conn(client, result, data):
         conn.verify_secrets()
         data.verify()
         data.verify_secrets()
-    except GLib.Error:
+    except GLib.Error: # pylint: disable=catching-non-exception
         conn.delete()
     finally:
         loop.quit()
