@@ -482,11 +482,12 @@ def verify_conn(client, result, data):
         loop.quit()
 
 
-def create_ap_list(adapter):
+def create_ap_list(adapter, active_connections):
     """Generate list of access points. Remove duplicate APs , keeping strongest
     ones and the active AP
 
     Args: adapter
+          active_connections - list of all active connections
     Returns: aps - list of access points
              active_ap - active AP
              active_ap_con - active Connection
@@ -503,8 +504,10 @@ def create_ap_list(adapter):
                  i.get_setting_wireless().get_mac_address() ==
                  adapter.get_hw_address()]
     try:
-        active_ap_con = active_ap.filter_connections(conns_cur)
+        ap_conns = active_ap.filter_connections(conns_cur)
         active_ap_name = ssid_to_utf8(active_ap)
+        active_ap_con = [active_conn for active_conn in active_connections
+                         if active_conn.get_connection() in ap_conns]
     except AttributeError:
         active_ap_name = None
         active_ap_con = []
@@ -527,7 +530,7 @@ def run():
     active = client.get_active_connections()
     adapter = choose_adapter(client)
     if adapter:
-        ap_actions = create_ap_actions(*create_ap_list(adapter))
+        ap_actions = create_ap_actions(*create_ap_list(adapter, active))
     else:
         ap_actions = []
 
