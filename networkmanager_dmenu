@@ -195,7 +195,7 @@ def process_ap(ap, is_active, adapter):
         conns_cur = [i for i in conns if
                      i.get_setting_wireless() is not None and
                      i.get_setting_wireless().get_mac_address() ==
-                     adapter.get_hw_address()]
+                     adapter.get_permanent_hw_address()]
         con = ap.filter_connections(conns_cur)
         if len(con) > 1:
             raise ValueError("There are multiple connections possible")
@@ -501,7 +501,7 @@ def create_ap_list(adapter):
     conns_cur = [i for i in conns if
                  i.get_setting_wireless() is not None and
                  i.get_setting_wireless().get_mac_address() ==
-                 adapter.get_hw_address()]
+                 adapter.get_permanent_hw_address()]
     try:
         active_ap_con = active_ap.filter_connections(conns_cur)
         active_ap_name = ssid_to_utf8(active_ap)
