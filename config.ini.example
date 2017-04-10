@@ -13,6 +13,7 @@ fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # m = number of monitor to display on
 # p = Custom Prompt for the networks menu
 # pinentry = Pinentry command
+# rofi_highlight = <True or False> # (Default: False) use rofi highlighting instead of '**'
 
 [editor]
 terminal = urxvtc

@@ -12,18 +12,18 @@ Add dmenu formatting options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
-import gi
 import itertools
 import locale
 import os
+from os.path import expanduser
 import shlex
 import sys
 import uuid
-from os.path import expanduser
 from subprocess import Popen, PIPE
 
+import gi
 gi.require_version('NM', '1.0')
-from gi.repository import GLib, NM
+from gi.repository import GLib, NM # pylint: disable=wrong-import-position
 
 try:
     import configparser as configparser
@@ -39,7 +39,7 @@ loop = GLib.MainLoop()
 conns = client.get_connections()
 
 
-def dmenu_cmd(num_lines, prompt="Networks"):
+def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
     """Parse config.ini if it exists and add options to the dmenu command
 
     Args: args - num_lines: number of lines to display
@@ -88,6 +88,11 @@ def dmenu_cmd(num_lines, prompt="Networks"):
             lines = "{} {}".format(lines, num_lines)
         if "pinentry" in args_dict:
             del args_dict["pinentry"]
+        if "rofi_highlight" in args_dict:
+            if active_lines:
+                dmenu_args.extend(["-a", ",".join([str(num)
+                                                   for num in active_lines])])
+            del args_dict["rofi_highlight"]
         extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
         res = [dmenu_command, "-p", str(prompt)]
         res.extend(dmenu_args)
@@ -168,9 +173,11 @@ class Action(object):
                  name,
                  f,
                  args=None,
-                 ):
+                 active=False,
+                ):
         self.name = name
         self.f = f
+        self.is_active = active
         if args is None:
             self.args = None
         elif isinstance(args, list):
@@ -230,13 +237,12 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):
     for ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(ap.get_strength())
         is_active = ap.get_bssid() == active_ap_bssid
-        active_flag = "**" if is_active else "  "
-        action_name = "{} {:<{}s}  {:<{}s}  {}".format(active_flag, name,
-                                                       max_len_name, sec,
-                                                       max_len_sec, bars)
+        action_name = "{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
+                                                    max_len_sec, bars)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
-                                     [active_connection, True, adapter]))
+                                     [active_connection, True, adapter],
+                                     active=True))
         else:
             ap_actions.append(Action(action_name, process_ap,
                                      [ap, False, adapter]))
@@ -260,8 +266,7 @@ def _create_vpngsm_actions(cons, active_cons, label):
     actions = []
     for con in cons:
         is_active = con.get_id() in active_con_ids
-        active_flag = "**" if is_active else "  "
-        action_name = "{} {}:{}".format(active_flag, con.get_id(), label)
+        action_name = "{}:{}".format(con.get_id(), label)
         if is_active:
             active_connection = [a for a in active_cons
                                  if a.get_id() == con.get_id()]
@@ -271,7 +276,7 @@ def _create_vpngsm_actions(cons, active_cons, label):
             active_connection = active_connection[0]
 
             actions.append(Action(action_name, process_vpngsm,
-                                  [active_connection, False]))
+                                  [active_connection, False], active=True))
         else:
             actions.append(Action(action_name, process_vpngsm,
                                   [con, True]))
@@ -287,30 +292,49 @@ def get_selection(client, aps, vpns, gsms, others):
                  gsms: list of Actions
                  others: list of Actions
     """
-    formated_aps = [str(ap) for ap in aps]
-    formated_vpns = [str(vpn) for vpn in vpns]
-    formated_gsms = [str(gsm) for gsm in gsms]
-    formated_others = [str(other) for other in others]
+
+    conf = configparser.ConfigParser()
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
+
+    try:
+        rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
+    except (configparser.NoOptionError, configparser.NoSectionError):
+        rofi_highlight = False
 
     inp = []
-    if formated_aps:
-        inp += formated_aps + [""]
-    if vpns:
-        inp += formated_vpns + [""]
-    if gsms:
-        inp += formated_gsms + [""]
-    inp += formated_others
+    empty_action = [Action('', None)]
+    all_actions = []
+    all_actions += aps + empty_action if aps else []
+    all_actions += vpns + empty_action if vpns else []
+    all_actions += gsms + empty_action if gsms else []
+    all_actions += others
+
+    if rofi_highlight:
+        inp = [str(action) for action in all_actions]
+    else:
+        inp = [('** ' if action.is_active else '   ') + str(action)
+               for action in all_actions]
+    active_lines = [index for index, action in enumerate(all_actions)
+                    if action.is_active]
 
     inp_bytes = "\n".join([str(i) for i in inp]).encode(ENC)
-    sel = Popen(dmenu_cmd(len(inp)), stdin=PIPE, stdout=PIPE,
+    command = dmenu_cmd(len(inp), active_lines=active_lines)
+    sel = Popen(command, stdin=PIPE, stdout=PIPE,
                 env=ENV).communicate(input=inp_bytes)[0].decode(ENC)
 
     if not sel.rstrip():
         sys.exit()
 
-    action = [i for i in aps + vpns + gsms + others
-              if str(i) == sel.rstrip("\n")]
-    assert len(action) == 1, "Selection was ambiguous: {}".format(str(sel))
+    if not rofi_highlight:
+        action = [i for i in aps + vpns + gsms + others
+                  if ((str(i) == str(sel.rstrip("\n")) and not i.is_active()) or
+                      ('** ' + str(i) == str(sel.rstrip('\n'))
+                       and i.is_active()))]
+    else:
+        action = [i for i in aps + vpns + gsms + others
+                  if str(i) == sel.rstrip("\n")]
+    assert len(action) == 1, \
+            "Selection was ambiguous: '{}'".format(str(sel.rstrip("\n")))
     return action[0]
 
 
@@ -476,7 +500,7 @@ def verify_conn(client, result, data):
         conn.verify_secrets()
         data.verify()
         data.verify_secrets()
-    except GLib.Error:
+    except GLib.Error: # pylint: disable=catching-non-exception
         conn.delete()
     finally:
         loop.quit()
