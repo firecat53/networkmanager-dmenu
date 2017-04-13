@@ -341,14 +341,15 @@ def get_selection(aps, vpns, gsms, others):
 
     if not rofi_highlight:
         action = [i for i in aps + vpns + gsms + others
-                  if ((str(i) == str(sel.rstrip("\n")) and not i.is_active()) or
+                  if ((str(i).strip() == str(sel.strip())
+                       and not i.is_active) or
                       ('** ' + str(i) == str(sel.rstrip('\n'))
-                       and i.is_active()))]
+                       and i.is_active))]
     else:
         action = [i for i in aps + vpns + gsms + others
-                  if str(i) == sel.rstrip("\n")]
+                  if str(i).strip() == sel.strip()]
     assert len(action) == 1, \
-            "Selection was ambiguous: '{}'".format(str(sel.rstrip("\n")))
+            "Selection was ambiguous: '{}'".format(str(sel.strip()))
     return action[0]
 
 
