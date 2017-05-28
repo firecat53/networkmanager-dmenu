@@ -38,6 +38,8 @@ CLIENT = NM.Client.new(None)
 LOOP = GLib.MainLoop()
 CONNS = CLIENT.get_connections()
 
+if sys.version_info.major < 3:
+    str = unicode
 
 def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disable=too-many-branches
     """Parse config.ini if it exists and add options to the dmenu command
@@ -144,7 +146,10 @@ def ssid_to_utf8(nm_ap):
     ssid = nm_ap.get_ssid()
     if not ssid:
         return ""
-    return NM.utils_ssid_to_utf8(ssid.get_data())
+    ret = NM.utils_ssid_to_utf8(ssid.get_data())
+    if sys.version_info.major < 3:
+        return ret.decode(ENC)
+    return ret
 
 
 def ap_security(nm_ap):
@@ -189,6 +194,9 @@ class Action(object):  # pylint: disable=too-few-public-methods
             self.args = [args]
 
     def __str__(self):
+        if sys.version_info.major < 3 and \
+                isinstance(self.name, unicode) is False :
+            return self.name.decode(ENC)
         return self.name
 
     def __call__(self):
@@ -246,8 +254,8 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
     for nm_ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(nm_ap.get_strength())
         is_active = nm_ap.get_bssid() == active_ap_bssid
-        action_name = "{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
-                                                    max_len_sec, bars)
+        action_name = u"{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
+                                                     max_len_sec, bars)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
                                      [active_connection, True, adapter],
@@ -280,12 +288,12 @@ def _create_vpngsm_actions(cons, active_cons, label):
     actions = []
     for con in cons:
         is_active = con.get_id() in active_con_ids
-        action_name = "{}:{}".format(con.get_id(), label)
+        action_name = u"{}:{}".format(con.get_id(), label)
         if is_active:
             active_connection = [a for a in active_cons
                                  if a.get_id() == con.get_id()]
             if len(active_connection) != 1:
-                raise ValueError("Multiple active connections match"
+                raise ValueError(u"Multiple active connections match"
                                  " the connection: {}".format(con.get_id()))
             active_connection = active_connection[0]
 
@@ -331,7 +339,7 @@ def get_selection(aps, vpns, gsms, others):
     active_lines = [index for index, action in enumerate(all_actions)
                     if action.is_active]
 
-    inp_bytes = "\n".join([str(i) for i in inp]).encode(ENC)
+    inp_bytes = "\n".join([i for i in inp]).encode(ENC)
     command = dmenu_cmd(len(inp), active_lines=active_lines)
     sel = Popen(command, stdin=PIPE, stdout=PIPE,
                 env=ENV).communicate(input=inp_bytes)[0].decode(ENC)
@@ -349,7 +357,7 @@ def get_selection(aps, vpns, gsms, others):
         action = [i for i in aps + vpns + gsms + others
                   if str(i).strip() == sel.strip()]
     assert len(action) == 1, \
-            "Selection was ambiguous: '{}'".format(str(sel.strip()))
+            u"Selection was ambiguous: '{}'".format(str(sel.strip()))
     return action[0]
 
 
@@ -441,7 +449,7 @@ def delete_connection():
     if not sel.strip():
         sys.exit()
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
-    assert len(action) == 1, "Selection was ambiguous: {}".format(str(sel))
+    assert len(action) == 1, u"Selection was ambiguous: {}".format(str(sel))
     action[0]()
 
 
