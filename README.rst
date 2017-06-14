@@ -51,6 +51,9 @@ Usage
 -----
 
 - Run script or bind to keystroke combination
+- If desired, dmenu or Rofi options can be passed on the command line instead of
+  or in addition to the config file. These will override options in the config
+  file.
 
 .. _PolicyKit permissions: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 .. _AUR Package: https://aur.archlinux.org/packages/networkmanager-dmenu-git/
