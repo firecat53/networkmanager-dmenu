@@ -104,6 +104,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
         res.extend(dmenu_args)
         res += list(itertools.chain.from_iterable(extras))
         res[1:1] = lines.split()
+        res = list(filter(None, res))  # Remove empty list elements
     res.extend(sys.argv[1:])
     return res
 
