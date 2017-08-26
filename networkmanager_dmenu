@@ -41,7 +41,7 @@ CONNS = CLIENT.get_connections()
 if sys.version_info.major < 3:
     str = unicode
 
-def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disable=too-many-branches
+def dmenu_cmd(num_lines, prompt="Networks", active_lines=None, passphrase_entry=False):  # pylint: disable=too-many-branches
     """Parse config.ini if it exists and add options to the dmenu command
 
     Args: args - num_lines: number of lines to display
@@ -98,22 +98,19 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             if active_lines:
                 dmenu_args.extend(["-a", ",".join([str(num)
                                                    for num in active_lines])])
-    if prompt == "Passphrase":
-        if conf.has_section('dmenu_passphrase'):
-            args = conf.items('dmenu_passphrase')
-            args_dict.update(args)
-        rofi_obscure = True
-        if conf.has_option('dmenu_passphrase', 'rofi_obscure'):
-            rofi_obscure = conf.getboolean('dmenu_passphrase', 'rofi_obscure')
-            del args_dict["rofi_obscure"]
-        if rofi_obscure is True and "rofi" in dmenu_command:
-            dmenu_args.extend(["-password"])
-    extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-    res = [dmenu_command, "-p", str(prompt)]
-    res.extend(dmenu_args)
-    res += list(itertools.chain.from_iterable(extras))
-    res[1:1] = lines.split()
-    res = list(filter(None, res))  # Remove empty list elements
+        if passphrase_entry:
+            try:
+                args = conf.items('dmenu_passphrase')
+            except configparser.NoSectionError:
+                conf = False
+            if conf:
+                args_dict.update(args)
+        extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
+        res = [dmenu_command, "-p", str(prompt)]
+        res.extend(dmenu_args)
+        res += list(itertools.chain.from_iterable(extras))
+        res[1:1] = lines.split()
+        res = list(filter(None, res))  # Remove empty list elements
     res.extend(sys.argv[1:])
     return res
 
@@ -451,7 +448,7 @@ def get_passphrase():
                 pin = res.split("D ")[1]
         return pin
     else:
-        return Popen(dmenu_cmd(0, "Passphrase"),
+        return Popen(dmenu_cmd(0, "Passphrase", passphrase_entry=True),
                      stdin=PIPE, stdout=PIPE).communicate()[0].decode(ENC)
 
 
