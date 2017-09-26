@@ -285,6 +285,7 @@ def create_gsm_actions(gsms, active):
     """Create the list of strings to display with associated function
     (activate/deactivate) GSM connections."""
     active_gsms = [i for i in active if
+                   i.get_connection() is not None and
                    i.get_connection().is_type(NM.SETTING_GSM_SETTING_NAME)]
     return _create_vpngsm_actions(gsms, active_gsms, "GSM")
 
