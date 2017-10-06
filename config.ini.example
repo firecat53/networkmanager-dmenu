@@ -15,10 +15,12 @@ fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # pinentry = Pinentry command
 # rofi_highlight = <True or False> # (Default: False) use rofi highlighting instead of '**'
 
-# # override normal foreground and background colors to obscure passphrase entry
+# # override normal foreground and background colors (dmenu) or use the
+# # -password option (rofi) to obscure passphrase entry
 # [dmenu_passphrase]
 # nf = #222222
 # nb = #222222
+# rofi_obscure = True
 
 [editor]
 terminal = urxvtc
