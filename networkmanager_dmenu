@@ -56,7 +56,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
     if not conf.sections():
         res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
         res.extend(sys.argv[1:])
-        return
+        return res
     if conf.has_section('dmenu'):
         args = conf.items('dmenu')
         args_dict = dict(args)
