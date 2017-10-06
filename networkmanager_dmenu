@@ -53,13 +53,12 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
     dmenu_command = "dmenu"
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    try:
-        args = conf.items('dmenu')
-    except configparser.NoSectionError:
-        conf = False
-    if not conf:
+    if not conf.sections():
         res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
-    else:
+        res.extend(sys.argv[1:])
+        return
+    if conf.has_section('dmenu'):
+        args = conf.items('dmenu')
         args_dict = dict(args)
         dmenu_args = []
         if "dmenu_command" in args_dict:
@@ -90,21 +89,31 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             lines = "{} {}".format(lines, num_lines)
         if "pinentry" in args_dict:
             del args_dict["pinentry"]
-        try:
+        if conf.has_option('dmenu', 'rofi_highlight'):
             rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
             del args_dict["rofi_highlight"]
-        except (configparser.NoOptionError, configparser.NoSectionError):
+        else:
             rofi_highlight = False
         if rofi_highlight is True and "rofi" in dmenu_command:
             if active_lines:
                 dmenu_args.extend(["-a", ",".join([str(num)
                                                    for num in active_lines])])
-        extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-        res = [dmenu_command, "-p", str(prompt)]
-        res.extend(dmenu_args)
-        res += list(itertools.chain.from_iterable(extras))
-        res[1:1] = lines.split()
-        res = list(filter(None, res))  # Remove empty list elements
+    if prompt == "Passphrase":
+        if conf.has_section('dmenu_passphrase'):
+            args = conf.items('dmenu_passphrase')
+            args_dict.update(args)
+        rofi_obscure = True
+        if conf.has_option('dmenu_passphrase', 'rofi_obscure'):
+            rofi_obscure = conf.getboolean('dmenu_passphrase', 'rofi_obscure')
+            del args_dict["rofi_obscure"]
+        if rofi_obscure is True and "rofi" in dmenu_command:
+            dmenu_args.extend(["-password"])
+    extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
+    res = [dmenu_command, "-p", str(prompt)]
+    res.extend(dmenu_args)
+    res += list(itertools.chain.from_iterable(extras))
+    res[1:1] = lines.split()
+    res = list(filter(None, res))  # Remove empty list elements
     res.extend(sys.argv[1:])
     return res
 
