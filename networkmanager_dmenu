@@ -56,7 +56,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
     if not conf.sections():
         res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
         res.extend(sys.argv[1:])
-        return
+        return res
     if conf.has_section('dmenu'):
         args = conf.items('dmenu')
         args_dict = dict(args)
@@ -333,11 +333,9 @@ def get_selection(aps, vpns, gsms, others):
 
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-
-    try:
+    rofi_highlight = False
+    if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
-    except (configparser.NoOptionError, configparser.NoSectionError):
-        rofi_highlight = False
 
     inp = []
     empty_action = [Action('', None)]
@@ -400,19 +398,15 @@ def launch_connection_editor():
 
     """
     conf = configparser.ConfigParser()
-    terminal = "xterm"
-    gui_if_available = "True"
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    try:
-        editor = conf.items("editor")
-    except configparser.NoSectionError:
-        conf = False
-    if conf:
-        opts = {str(k): str(v) for (k, v) in editor}
-        if "terminal" in opts:
-            terminal = opts["terminal"]
-        if "gui_if_available" in opts:
-            gui_if_available = opts["gui_if_available"]
+    if conf.has_option("editor", "terminal"):
+        terminal = conf.get("editor", "terminal")
+    else:
+        terminal = "xterm"
+    if conf.has_option("editor", "gui_if_available"):
+        gui_if_available = conf.get("editor", "gui_if_available")
+    else:
+        gui_if_available = "True"
     if gui_if_available == "True":
         try:
             Popen(["nm-connection-editor"]).communicate()
@@ -432,10 +426,8 @@ def get_passphrase():
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     pinentry = None
-    try:
+    if conf.has_option("dmenu", "pinentry"):
         pinentry = conf.get("dmenu", "pinentry")
-    except (configparser.NoOptionError, configparser.NoSectionError):
-        pass
     if pinentry:
         pin = ""
         out = Popen(pinentry,
