@@ -340,13 +340,15 @@ def get_selection(aps, vpns, gsms, others):
     rofi_highlight = False
     if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
+        
+    wwan_enabled = CLIENT.wwan_get_enabled()
 
     inp = []
     empty_action = [Action('', None)]
     all_actions = []
     all_actions += aps + empty_action if aps else []
     all_actions += vpns + empty_action if vpns else []
-    all_actions += gsms + empty_action if gsms else []
+    all_actions += gsms + empty_action if (gsms and wwan_enabled) else []
     all_actions += others
 
     if rofi_highlight is True:
