@@ -140,6 +140,16 @@ def choose_adapter(client):
     return devices[0]
 
 
+def is_modemmanager_installed():
+    """Check if ModemManager is installed"""
+    devnull = open(os.devnull)
+    try:
+        Popen(["ModemManager"], stdout=devnull, stderr=devnull).communicate()
+    except OSError:
+        return False
+    return True
+
+
 def create_other_actions(client):
     """Return list of other actions that can be taken
 
@@ -330,7 +340,16 @@ def _create_vpngsm_actions(cons, active_cons, label):
     return actions
 
 
-def get_selection(aps, vpns, gsms, blues, others):
+def create_wwan_actions(client):
+    """Create WWWAN actions
+
+    """
+    wwan_enabled = client.wwan_get_enabled()
+    wwan_action = "Disable" if wwan_enabled else "Enable"
+    return [Action("{} WWAN".format(wwan_action), toggle_wwan, not wwan_enabled)]
+
+
+def get_selection(aps, vpns, gsms, blues, wwan, others):
     """Combine the arg lists and send to dmenu for selection.
     Also executes the associated action.
 
@@ -338,22 +357,23 @@ def get_selection(aps, vpns, gsms, blues, others):
                  vpns: list of Actions
                  gsms: list of Actions
                  blues: list of Actions
+                 wwan: list of Actions
                  others: list of Actions
-    """
 
+    """
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     rofi_highlight = False
     if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
-
     inp = []
     empty_action = [Action('', None)]
     all_actions = []
     all_actions += aps + empty_action if aps else []
     all_actions += vpns + empty_action if vpns else []
-    all_actions += gsms + empty_action if gsms else []
+    all_actions += gsms + empty_action if (gsms and wwan) else []
     all_actions += blues + empty_action if blues else []
+    all_actions += wwan + empty_action if wwan else []
     all_actions += others
 
     if rofi_highlight is True:
@@ -373,13 +393,13 @@ def get_selection(aps, vpns, gsms, blues, others):
         sys.exit()
 
     if rofi_highlight is False:
-        action = [i for i in aps + vpns + gsms + blues + others
+        action = [i for i in aps + vpns + gsms + blues + wwan + others
                   if ((str(i).strip() == str(sel.strip())
                        and not i.is_active) or
                       ('** ' + str(i) == str(sel.rstrip('\n'))
                        and i.is_active))]
     else:
-        action = [i for i in aps + vpns + gsms + blues + others
+        action = [i for i in aps + vpns + gsms + blues + wwan + others
                   if str(i).strip() == sel.strip()]
     assert len(action) == 1, \
             u"Selection was ambiguous: '{}'".format(str(sel.strip()))
@@ -402,6 +422,15 @@ def toggle_wifi(enable):
 
     """
     CLIENT.wireless_set_enabled(enable)
+
+
+def toggle_wwan(enable):
+    """Enable/disable WWAN
+
+    Args: enable - boolean
+
+    """
+    CLIENT.wwan_set_enabled(enable)
 
 
 def launch_connection_editor():
@@ -610,16 +639,22 @@ def run():
         ap_actions = []
 
     vpns = [i for i in CONNS if i.is_type(NM.SETTING_VPN_SETTING_NAME)]
-    gsms = [i for i in CONNS if i.is_type(NM.SETTING_GSM_SETTING_NAME)]
     blues = [i for i in CONNS if i.is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
 
     vpn_actions = create_vpn_actions(vpns, active)
-    gsm_actions = create_gsm_actions(gsms, active)
     blue_actions = create_blue_actions(blues, active)
     other_actions = create_other_actions(CLIENT)
+    wwan_installed = is_modemmanager_installed()
+    if wwan_installed:
+        gsms = [i for i in CONNS if i.is_type(NM.SETTING_GSM_SETTING_NAME)]
+        gsm_actions = create_gsm_actions(gsms, active)
+        wwan_actions = create_wwan_actions(CLIENT)
+    else:
+        gsm_actions = []
+        wwan_actions = []
 
-    sel = get_selection(ap_actions, vpn_actions,
-                        gsm_actions, blue_actions, other_actions)
+    sel = get_selection(ap_actions, vpn_actions, gsm_actions,
+                        blue_actions, wwan_actions, other_actions)
     sel()
 
 
