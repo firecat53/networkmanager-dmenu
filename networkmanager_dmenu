@@ -148,8 +148,12 @@ def create_other_actions(client):
     networking_action = "Disable" if networking_enabled else "Enable"
     wifi_enabled = client.wireless_get_enabled()
     wifi_action = "Disable" if wifi_enabled else "Enable"
+    wwan_enabled = client.wwan_get_enabled()
+    wwan_action = "Disable" if wwan_enabled else "Enable"
     return [Action("{} Wifi".format(wifi_action), toggle_wifi,
                    not wifi_enabled),
+            Action("{} WWAN".format(wwan_action), toggle_wwan,
+                   not wwan_enabled),
             Action("{} Networking".format(networking_action),
                    toggle_networking, not networking_enabled),
             Action("Launch Connection Manager", launch_connection_editor),
@@ -392,6 +396,13 @@ def toggle_wifi(enable):
     """
     CLIENT.wireless_set_enabled(enable)
 
+def toggle_wwan(enable):
+    """Enable/disable WWAN
+
+    Args: enable - boolean
+
+    """
+    CLIENT.wwan_set_enabled(enable)
 
 def launch_connection_editor():
     """Launch nmtui or the gui nm-connection-editor
