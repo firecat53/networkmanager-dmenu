@@ -53,13 +53,12 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
     dmenu_command = "dmenu"
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    try:
-        args = conf.items('dmenu')
-    except configparser.NoSectionError:
-        conf = False
-    if not conf:
+    if not conf.sections():
         res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
-    else:
+        res.extend(sys.argv[1:])
+        return res
+    if conf.has_section('dmenu'):
+        args = conf.items('dmenu')
         args_dict = dict(args)
         dmenu_args = []
         if "dmenu_command" in args_dict:
@@ -90,21 +89,31 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             lines = "{} {}".format(lines, num_lines)
         if "pinentry" in args_dict:
             del args_dict["pinentry"]
-        try:
+        if conf.has_option('dmenu', 'rofi_highlight'):
             rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
             del args_dict["rofi_highlight"]
-        except (configparser.NoOptionError, configparser.NoSectionError):
+        else:
             rofi_highlight = False
         if rofi_highlight is True and "rofi" in dmenu_command:
             if active_lines:
                 dmenu_args.extend(["-a", ",".join([str(num)
                                                    for num in active_lines])])
-        extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-        res = [dmenu_command, "-p", str(prompt)]
-        res.extend(dmenu_args)
-        res += list(itertools.chain.from_iterable(extras))
-        res[1:1] = lines.split()
-        res = list(filter(None, res))  # Remove empty list elements
+    if prompt == "Passphrase":
+        if conf.has_section('dmenu_passphrase'):
+            args = conf.items('dmenu_passphrase')
+            args_dict.update(args)
+        rofi_obscure = True
+        if conf.has_option('dmenu_passphrase', 'rofi_obscure'):
+            rofi_obscure = conf.getboolean('dmenu_passphrase', 'rofi_obscure')
+            del args_dict["rofi_obscure"]
+        if rofi_obscure is True and "rofi" in dmenu_command:
+            dmenu_args.extend(["-password"])
+    extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
+    res = [dmenu_command, "-p", str(prompt)]
+    res.extend(dmenu_args)
+    res += list(itertools.chain.from_iterable(extras))
+    res[1:1] = lines.split()
+    res = list(filter(None, res))  # Remove empty list elements
     res.extend(sys.argv[1:])
     return res
 
@@ -139,8 +148,12 @@ def create_other_actions(client):
     networking_action = "Disable" if networking_enabled else "Enable"
     wifi_enabled = client.wireless_get_enabled()
     wifi_action = "Disable" if wifi_enabled else "Enable"
+    wwan_enabled = client.wwan_get_enabled()
+    wwan_action = "Disable" if wwan_enabled else "Enable"
     return [Action("{} Wifi".format(wifi_action), toggle_wifi,
                    not wifi_enabled),
+            Action("{} WWAN".format(wwan_action), toggle_wwan,
+                   not wwan_enabled),
             Action("{} Networking".format(networking_action),
                    toggle_networking, not networking_enabled),
             Action("Launch Connection Manager", launch_connection_editor),
@@ -285,6 +298,7 @@ def create_gsm_actions(gsms, active):
     """Create the list of strings to display with associated function
     (activate/deactivate) GSM connections."""
     active_gsms = [i for i in active if
+                   i.get_connection() is not None and
                    i.get_connection().is_type(NM.SETTING_GSM_SETTING_NAME)]
     return _create_vpngsm_actions(gsms, active_gsms, "GSM")
 
@@ -323,11 +337,9 @@ def get_selection(aps, vpns, gsms, others):
 
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-
-    try:
+    rofi_highlight = False
+    if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
-    except (configparser.NoOptionError, configparser.NoSectionError):
-        rofi_highlight = False
 
     inp = []
     empty_action = [Action('', None)]
@@ -384,25 +396,28 @@ def toggle_wifi(enable):
     """
     CLIENT.wireless_set_enabled(enable)
 
+def toggle_wwan(enable):
+    """Enable/disable WWAN
+
+    Args: enable - boolean
+
+    """
+    CLIENT.wwan_set_enabled(enable)
 
 def launch_connection_editor():
     """Launch nmtui or the gui nm-connection-editor
 
     """
     conf = configparser.ConfigParser()
-    terminal = "xterm"
-    gui_if_available = "True"
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    try:
-        editor = conf.items("editor")
-    except configparser.NoSectionError:
-        conf = False
-    if conf:
-        opts = {str(k): str(v) for (k, v) in editor}
-        if "terminal" in opts:
-            terminal = opts["terminal"]
-        if "gui_if_available" in opts:
-            gui_if_available = opts["gui_if_available"]
+    if conf.has_option("editor", "terminal"):
+        terminal = conf.get("editor", "terminal")
+    else:
+        terminal = "xterm"
+    if conf.has_option("editor", "gui_if_available"):
+        gui_if_available = conf.get("editor", "gui_if_available")
+    else:
+        gui_if_available = "True"
     if gui_if_available == "True":
         try:
             Popen(["nm-connection-editor"]).communicate()
@@ -422,10 +437,8 @@ def get_passphrase():
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     pinentry = None
-    try:
+    if conf.has_option("dmenu", "pinentry"):
         pinentry = conf.get("dmenu", "pinentry")
-    except (configparser.NoOptionError, configparser.NoSectionError):
-        pass
     if pinentry:
         pin = ""
         out = Popen(pinentry,
