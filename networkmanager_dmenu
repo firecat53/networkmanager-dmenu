@@ -139,7 +139,15 @@ def choose_adapter(client):
     assert len(devices) == 1
     return devices[0]
 
-
+def is_modemmanager_installed():
+    """Check if ModemManager is installed"""
+    devnull = open(os.devnull)
+    try:
+        Popen(["ModemManager"], stdout=devnull, stderr=devnull).communicate()
+    except OSError:
+        return False
+    return True
+    
 def create_other_actions(client):
     """Return list of other actions that can be taken
 
@@ -148,17 +156,20 @@ def create_other_actions(client):
     networking_action = "Disable" if networking_enabled else "Enable"
     wifi_enabled = client.wireless_get_enabled()
     wifi_action = "Disable" if wifi_enabled else "Enable"
+
+    return [
+        Action("{} Wifi".format(wifi_action), toggle_wifi, not wifi_enabled),
+        Action("{} Networking".format(networking_action),
+                toggle_networking, not networking_enabled),
+        Action("Launch Connection Manager", launch_connection_editor),
+        Action("Delete a Connection", delete_connection)
+    ]
+
+def create_wwan_actions(client):
+    """Create WWWAN actions"""
     wwan_enabled = client.wwan_get_enabled()
     wwan_action = "Disable" if wwan_enabled else "Enable"
-    return [Action("{} Wifi".format(wifi_action), toggle_wifi,
-                   not wifi_enabled),
-            Action("{} WWAN".format(wwan_action), toggle_wwan,
-                   not wwan_enabled),
-            Action("{} Networking".format(networking_action),
-                   toggle_networking, not networking_enabled),
-            Action("Launch Connection Manager", launch_connection_editor),
-            Action("Delete a Connection", delete_connection)]
-
+    return [Action("{} WWAN".format(wwan_action), toggle_wwan, not wwan_enabled)]
 
 def ssid_to_utf8(nm_ap):
     """ Convert binary ssid to utf-8 """
@@ -325,13 +336,14 @@ def _create_vpngsm_actions(cons, active_cons, label):
     return actions
 
 
-def get_selection(aps, vpns, gsms, others):
+def get_selection(aps, vpns, gsms, wwan, others):
     """Combine the arg lists and send to dmenu for selection.
     Also executes the associated action.
 
     Args: args - aps: list of Actions
                  vpns: list of Actions
                  gsms: list of Actions
+                 wwan: list of Actions
                  others: list of Actions
     """
 
@@ -340,15 +352,14 @@ def get_selection(aps, vpns, gsms, others):
     rofi_highlight = False
     if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
-        
-    wwan_enabled = CLIENT.wwan_get_enabled()
-
+    
     inp = []
     empty_action = [Action('', None)]
     all_actions = []
     all_actions += aps + empty_action if aps else []
     all_actions += vpns + empty_action if vpns else []
-    all_actions += gsms + empty_action if (gsms and wwan_enabled) else []
+    all_actions += wwan + empty_action
+    all_actions += gsms + empty_action if (gsms) else []
     all_actions += others
 
     if rofi_highlight is True:
@@ -606,20 +617,29 @@ def run():
     """Main script entrypoint"""
     active = CLIENT.get_active_connections()
     adapter = choose_adapter(CLIENT)
+
     if adapter:
         ap_actions = create_ap_actions(*create_ap_list(adapter, active))
     else:
         ap_actions = []
 
     vpns = [i for i in CONNS if i.is_type(NM.SETTING_VPN_SETTING_NAME)]
-    gsms = [i for i in CONNS if i.is_type(NM.SETTING_GSM_SETTING_NAME)]
 
     vpn_actions = create_vpn_actions(vpns, active)
-    gsm_actions = create_gsm_actions(gsms, active)
+
     other_actions = create_other_actions(CLIENT)
 
+    wwan_installed = is_modemmanager_installed()
+    if wwan_installed:
+        gsms = [i for i in CONNS if i.is_type(NM.SETTING_GSM_SETTING_NAME)]
+        gsm_actions = create_gsm_actions(gsms, active)
+        wwan_actions = create_wwan_actions(CLIENT)
+    else:
+        gsm_actions = []
+        wwan_actions = []
+
     sel = get_selection(ap_actions, vpn_actions,
-                        gsm_actions, other_actions)
+                        gsm_actions, wwan_actions, other_actions)
     sel()
 
 
