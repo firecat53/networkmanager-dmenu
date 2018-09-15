@@ -210,7 +210,7 @@ class Action(object):  # pylint: disable=too-few-public-methods
 
     def __str__(self):
         if sys.version_info.major < 3 and \
-                isinstance(self.name, unicode) is False :
+                isinstance(self.name, unicode) is False:
             return self.name.decode(ENC)
         return self.name
 
@@ -299,6 +299,15 @@ def create_gsm_actions(gsms, active):
     return _create_vpngsm_actions(gsms, active_gsms, "GSM")
 
 
+def create_blue_actions(blues, active):
+    """Create the list of strings to display with associated function
+    (activate/deactivate) Bluetooth connections."""
+    active_blues = [i for i in active if
+                    i.get_connection() is not None and
+                    i.get_connection().is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
+    return _create_vpngsm_actions(blues, active_blues, "Bluetooth")
+
+
 def _create_vpngsm_actions(cons, active_cons, label):
     active_con_ids = [a.get_id() for a in active_cons]
     actions = []
@@ -321,13 +330,14 @@ def _create_vpngsm_actions(cons, active_cons, label):
     return actions
 
 
-def get_selection(aps, vpns, gsms, others):
+def get_selection(aps, vpns, gsms, blues, others):
     """Combine the arg lists and send to dmenu for selection.
     Also executes the associated action.
 
     Args: args - aps: list of Actions
                  vpns: list of Actions
                  gsms: list of Actions
+                 blues: list of Actions
                  others: list of Actions
     """
 
@@ -343,6 +353,7 @@ def get_selection(aps, vpns, gsms, others):
     all_actions += aps + empty_action if aps else []
     all_actions += vpns + empty_action if vpns else []
     all_actions += gsms + empty_action if gsms else []
+    all_actions += blues + empty_action if blues else []
     all_actions += others
 
     if rofi_highlight is True:
@@ -362,13 +373,13 @@ def get_selection(aps, vpns, gsms, others):
         sys.exit()
 
     if rofi_highlight is False:
-        action = [i for i in aps + vpns + gsms + others
+        action = [i for i in aps + vpns + gsms + blues + others
                   if ((str(i).strip() == str(sel.strip())
                        and not i.is_active) or
                       ('** ' + str(i) == str(sel.rstrip('\n'))
                        and i.is_active))]
     else:
-        action = [i for i in aps + vpns + gsms + others
+        action = [i for i in aps + vpns + gsms + blues + others
                   if str(i).strip() == sel.strip()]
     assert len(action) == 1, \
             u"Selection was ambiguous: '{}'".format(str(sel.strip()))
@@ -600,13 +611,15 @@ def run():
 
     vpns = [i for i in CONNS if i.is_type(NM.SETTING_VPN_SETTING_NAME)]
     gsms = [i for i in CONNS if i.is_type(NM.SETTING_GSM_SETTING_NAME)]
+    blues = [i for i in CONNS if i.is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
 
     vpn_actions = create_vpn_actions(vpns, active)
     gsm_actions = create_gsm_actions(gsms, active)
+    blue_actions = create_blue_actions(blues, active)
     other_actions = create_other_actions(CLIENT)
 
     sel = get_selection(ap_actions, vpn_actions,
-                        gsm_actions, other_actions)
+                        gsm_actions, blue_actions, other_actions)
     sel()
 
 

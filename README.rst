@@ -8,7 +8,7 @@ Features
 
 - Connect to existing NetworkManager wifi or wired connections
 - Connect to new wifi connections. Requests passphrase if required
-- Connect to _existing_ VPN connections 
+- Connect to _existing_ VPN, GSM/WWAN and Bluetooth connections 
 - Enable/Disable wifi
 - Enable/Disable networking
 - Launch nm-connection-editor GUI
