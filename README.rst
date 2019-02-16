@@ -16,6 +16,7 @@ Features
 - Support for multiple wifi adapters
 - Optional Pinentry support for secure passphrase entry
 - Delete existing connections
+- Rescan wifi networks
 
 License
 -------
