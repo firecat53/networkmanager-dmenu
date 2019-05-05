@@ -535,13 +535,13 @@ def set_new_connection(nm_ap, nm_pw, adapter):
 
     """
     nm_pw = str(nm_pw).strip()
-    profile = create_wifi_profile(nm_ap, nm_pw)
+    profile = create_wifi_profile(nm_ap, nm_pw, adapter)
     CLIENT.add_and_activate_connection_async(profile, adapter, nm_ap.get_path(),
                                              None, verify_conn, profile)
     LOOP.run()
 
 
-def create_wifi_profile(nm_ap, password):
+def create_wifi_profile(nm_ap, password, adapter):
     # pylint: disable=C0301
     # From https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/gi/add_connection.py
     # and https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/dbus/add-wifi-psk-connection.py
@@ -559,6 +559,7 @@ def create_wifi_profile(nm_ap, password):
     s_wifi = NM.SettingWireless.new()
     s_wifi.set_property(NM.SETTING_WIRELESS_SSID, nm_ap.get_ssid())
     s_wifi.set_property(NM.SETTING_WIRELESS_MODE, 'infrastructure')
+    s_wifi.set_property(NM.SETTING_WIRELESS_MAC_ADDRESS, adapter.get_permanent_hw_address())
     profile.add_setting(s_wifi)
 
     s_ip4 = NM.SettingIP4Config.new()
