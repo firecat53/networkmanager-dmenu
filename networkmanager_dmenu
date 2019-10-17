@@ -282,6 +282,8 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
     (activate/deactivate)
 
     """
+    conf = configparser.ConfigParser()
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     active_ap_bssid = active_ap.get_bssid() if active_ap is not None else ""
 
     names = [ssid_to_utf8(ap) for ap in aps]
@@ -294,8 +296,13 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
     for nm_ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(nm_ap.get_strength())
         is_active = nm_ap.get_bssid() == active_ap_bssid
-        action_name = u"{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
-                                                     max_len_sec, bars)
+        if conf.has_option('dmenu', 'single_line'):
+            single_line=conf.getboolean("dmenu","single_line")
+        if single_line:
+            action_name = u"{}  {}  {}".format(name, sec, bars)
+        else:
+            action_name = u"{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
+                                                         max_len_sec, bars)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
                                      [active_connection, True, adapter],
@@ -391,8 +398,10 @@ def get_selection(eths, aps, vpns, gsms, blues, wwan, others):
     rofi_highlight = False
     if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
+    if conf.has_option('dmenu', 'single_line'):
+        single_line=conf.getboolean("dmenu","single_line")
     inp = []
-    empty_action = [Action('', None)]
+    empty_action = [Action('', None)] if not single_line else []
     all_actions = []
     all_actions += eths + empty_action if eths else []
     all_actions += aps + empty_action if aps else []
