@@ -89,6 +89,8 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             lines = "{} {}".format(lines, num_lines)
         if "pinentry" in args_dict:
             del args_dict["pinentry"]
+        if "compact" in args_dict:
+            del args_dict["compact"]
         if conf.has_option('dmenu', 'rofi_highlight'):
             rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
             del args_dict["rofi_highlight"]
@@ -296,9 +298,9 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
     for nm_ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(nm_ap.get_strength())
         is_active = nm_ap.get_bssid() == active_ap_bssid
-        if conf.has_option('dmenu', 'single_line'):
-            single_line=conf.getboolean("dmenu","single_line")
-        if single_line:
+        compact = conf.getboolean("dmenu", "compact") \
+                if conf.has_option('dmenu', 'compact') else False
+        if compact:
             action_name = u"{}  {}  {}".format(name, sec, bars)
         else:
             action_name = u"{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
@@ -398,10 +400,10 @@ def get_selection(eths, aps, vpns, gsms, blues, wwan, others):
     rofi_highlight = False
     if conf.has_option('dmenu', 'rofi_highlight'):
         rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
-    if conf.has_option('dmenu', 'single_line'):
-        single_line=conf.getboolean("dmenu","single_line")
+    compact = conf.getboolean("dmenu", "compact") \
+            if conf.has_option('dmenu', 'compact') else False
     inp = []
-    empty_action = [Action('', None)] if not single_line else []
+    empty_action = [Action('', None)] if not compact else []
     all_actions = []
     all_actions += eths + empty_action if eths else []
     all_actions += aps + empty_action if aps else []
