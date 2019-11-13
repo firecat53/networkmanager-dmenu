@@ -1,6 +1,8 @@
 Networkmanager-dmenu
 ====================
 
+**NOTE: Python 2.x support ended as of 2019/11/13**
+
 Small script to manage NetworkManager connections with dmenu instead of nm-applet
 
 Features
@@ -26,7 +28,7 @@ License
 Requirements
 ------------
 
-1. Python 2.7+ or 3.2+
+1. Python 3.2+
 2. NetworkManager
 3. Dmenu. Basic support is included for Rofi_, but most Rofi configuration/theming should be done via Xresources.
 4. Python gobject (PyGObject, python-gobject, etc.)

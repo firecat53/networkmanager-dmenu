@@ -12,6 +12,7 @@ Add dmenu formatting options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
+import configparser
 import itertools
 import locale
 import os
@@ -25,11 +26,6 @@ import gi
 gi.require_version('NM', '1.0')
 from gi.repository import GLib, NM  # pylint: disable=wrong-import-position
 
-try:
-    import configparser as configparser
-except ImportError:
-    import ConfigParser as configparser
-
 ENV = os.environ.copy()
 ENV['LC_ALL'] = 'C'
 ENC = locale.getpreferredencoding()
@@ -37,9 +33,6 @@ ENC = locale.getpreferredencoding()
 CLIENT = NM.Client.new(None)
 LOOP = GLib.MainLoop()
 CONNS = CLIENT.get_connections()
-
-if sys.version_info.major < 3:
-    str = unicode
 
 def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disable=too-many-branches
     """Parse config.ini if it exists and add options to the dmenu command
@@ -189,8 +182,6 @@ def ssid_to_utf8(nm_ap):
     if not ssid:
         return ""
     ret = NM.utils_ssid_to_utf8(ssid.get_data())
-    if sys.version_info.major < 3:
-        return ret.decode(ENC)
     return ret
 
 
@@ -217,7 +208,7 @@ def ap_security(nm_ap):
     return sec_str.lstrip()
 
 
-class Action(object):  # pylint: disable=too-few-public-methods
+class Action():  # pylint: disable=too-few-public-methods
     """Helper class to execute functions from a string variable"""
     def __init__(self,
                  name,
@@ -236,9 +227,6 @@ class Action(object):  # pylint: disable=too-few-public-methods
             self.args = [args]
 
     def __str__(self):
-        if sys.version_info.major < 3 and \
-                isinstance(self.name, unicode) is False:
-            return self.name.decode(ENC)
         return self.name
 
     def __call__(self):
