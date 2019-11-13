@@ -14,6 +14,7 @@ fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # p = Custom Prompt for the networks menu
 # pinentry = Pinentry command
 # rofi_highlight = <True or False> # (Default: False) use rofi highlighting instead of '**'
+# compact = <True or False> # (Default: False). Remove extra spacing from display
 
 # # override normal foreground and background colors (dmenu) or use the
 # # -password option (rofi) to obscure passphrase entry
