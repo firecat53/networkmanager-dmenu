@@ -397,9 +397,8 @@ def get_selection(eths, aps, vpns, gsms, blues, wwan, others):
     """
     conf = configparser.ConfigParser()
     conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    rofi_highlight = False
-    if conf.has_option('dmenu', 'rofi_highlight'):
-        rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
+    rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight') \
+            if conf.has_option('dmenu', 'rofi_highlight') else False
     compact = conf.getboolean("dmenu", "compact") \
             if conf.has_option('dmenu', 'compact') else False
     inp = []
