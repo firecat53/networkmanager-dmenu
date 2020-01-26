@@ -432,7 +432,7 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others):
         action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others
                   if ((str(i).strip() == str(sel.strip())
                        and not i.is_active) or
-                      ('** ' + str(i) == str(sel.rstrip('\n'))
+                      ('== ' + str(i) == str(sel.rstrip('\n'))
                        and i.is_active))]
     else:
         action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others
