@@ -58,6 +58,8 @@ Installation
 - If using Rofi, you can try some of the command line options in config.ini or
   set them using the `dmenu_command` setting, but I haven't tested most of them
   so I'd suggest configuring via .Xresources where possible. 
+- Saved connections can be listed if desired. Set `list_saved = True` under
+  `[dmenu]` in config.ini.
 - If desired, copy the networkmanager_dmenu.desktop to /usr/share/applications
   or ~/.local/share/applications.
 - If you want to run the script as $USER instead of ROOT, set `PolicyKit

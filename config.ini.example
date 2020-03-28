@@ -1,5 +1,6 @@
 [dmenu]
-fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
+fn = SourceCodePro-11
+#fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # dmenu_command = /usr/bin/dmenu
 # # Note that dmenu_command can contain arguments as well like `rofi -width 30`
 # # Rofi and dmenu are set to case insensitive by default `-i`
@@ -17,16 +18,15 @@ fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # compact = <True or False> # (Default: False). Remove extra spacing from display
 # wifi_chars = <string of 4 unicode characters representing 1-4 bars strength>
 # wifi_chars = ▂▄▆█
+# list_saved = <True or False> # (Default: False) list saved connections
 
+# [dmenu_passphrase]
 # # override normal foreground and background colors (dmenu) or use the
 # # -password option (rofi) to obscure passphrase entry
-# [dmenu_passphrase]
 # nf = #222222
 # nb = #222222
 # rofi_obscure = True
 
-[editor]
-terminal = urxvtc
-gui_if_available = True
+# [editor]
 # terminal = <name of terminal program>
-# gui_if_available = <True or False>
+# gui_if_available = <True or False> (Default: True)
