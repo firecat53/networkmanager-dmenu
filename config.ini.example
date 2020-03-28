@@ -1,3 +1,6 @@
+[general]
+# list_saved = <True or False> # (Default: True) list saved connections
+
 [dmenu]
 fn = -*-terminus-medium-*-*-*-16-*-*-*-*-*-*-*
 # dmenu_command = /usr/bin/dmenu

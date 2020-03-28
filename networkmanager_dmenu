@@ -349,6 +349,13 @@ def create_blue_actions(blues, active):
                     i.get_connection().is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
     return _create_vpngsm_actions(blues, active_blues, "Bluetooth")
 
+def create_saved_actions(saved, active):
+    """Create the list of strings to display with associated function
+    (activate/deactivate) for VPN connections.
+
+    """
+    #  active_vpns = [i for i in active if i.get_vpn()]
+    return _create_vpngsm_actions(saved, [], " SAVED")
 
 def _create_vpngsm_actions(cons, active_cons, label):
     active_con_ids = [a.get_id() for a in active_cons]
@@ -381,7 +388,7 @@ def create_wwan_actions(client):
     return [Action("{} WWAN".format(wwan_action), toggle_wwan, not wwan_enabled)]
 
 
-def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others):
+def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
     """Combine the arg lists and send to dmenu for selection.
     Also executes the associated action.
 
@@ -410,6 +417,7 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others):
     all_actions += gsms + empty_action if (gsms and wwan) else []
     all_actions += blues + empty_action if blues else []
     all_actions += wwan + empty_action if wwan else []
+    all_actions += saved + empty_action if saved else []
     all_actions += others
 
     if rofi_highlight is True:
@@ -429,13 +437,13 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others):
         sys.exit()
 
     if rofi_highlight is False:
-        action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others
+        action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others + saved
                   if ((str(i).strip() == str(sel.strip())
                        and not i.is_active) or
                       ('== ' + str(i) == str(sel.rstrip('\n'))
                        and i.is_active))]
     else:
-        action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others
+        action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others + saved
                   if str(i).strip() == sel.strip()]
     assert len(action) == 1, \
         u"Selection was ambiguous: '{}'".format(str(sel.strip()))
@@ -692,8 +700,17 @@ def run():
         gsm_actions = []
         wwan_actions = []
 
+    saved_actions = None
+    conf = configparser.ConfigParser()
+    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
+    list_saved = conf.getboolean('general', 'list_saved', fallback=True)
+    if list_saved:
+        saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]
+        saved_actions = create_saved_actions(saved_cons, active)
+
+
     sel = get_selection(eth_actions, ap_actions, vpn_actions, wg_actions,
-                        gsm_actions, blue_actions, wwan_actions, other_actions)
+                        gsm_actions, blue_actions, wwan_actions, other_actions, saved_actions)
     sel()
 
 
