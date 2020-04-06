@@ -287,6 +287,10 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
 
     for nm_ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(nm_ap.get_strength())
+        wifi_chars = conf.get("dmenu", "wifi_chars") \
+            if conf.has_option("dmenu", "wifi_chars") else False
+        if wifi_chars:
+            bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == '*'])
         is_active = nm_ap.get_bssid() == active_ap_bssid
         compact = conf.getboolean("dmenu", "compact") \
             if conf.has_option('dmenu', 'compact') else False
