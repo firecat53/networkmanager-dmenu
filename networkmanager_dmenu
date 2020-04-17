@@ -242,6 +242,10 @@ def process_ap(nm_ap, is_active, adapter):
     """Activate/Deactivate a connection and get password if required"""
     if is_active:
         CLIENT.deactivate_connection_async(nm_ap)
+        notify = Popen(["notify-send",
+                        "-u", "low",
+                        "Wireless Disconnected", ssid_to_utf8(adapter.get_active_access_point()),
+                        "-h", "string:x-canonical-private-synchronous:wirelessnetwork"], stdout=PIPE, stderr=PIPE).communicate()
     else:
         conns_cur = [i for i in CONNS if
                      i.get_setting_wireless() is not None and
@@ -253,6 +257,10 @@ def process_ap(nm_ap, is_active, adapter):
 
         if len(con) == 1:
             CLIENT.activate_connection_async(con[0])
+            notify = Popen(["notify-send",
+                            "-u", "low",
+                            "Wireless Connected", ssid_to_utf8(nm_ap),
+                            "-h", "string:x-canonical-private-synchronous:wirelessnetwork"], stdout=PIPE, stderr=PIPE).communicate()
         else:
             if ap_security(nm_ap) != "--":
                 password = get_passphrase()
