@@ -138,12 +138,12 @@ def choose_adapter(client):
 
 def is_modemmanager_installed():
     """Check if ModemManager is installed"""
-    devnull = open(os.devnull)
-    try:
-        Popen(["ModemManager"], stdout=devnull, stderr=devnull).communicate()
-    except OSError:
-        return False
-    return True
+    with open(os.devnull) as devnull:
+        try:
+            Popen(["ModemManager"], stdout=devnull, stderr=devnull).communicate()
+        except OSError:
+            return False
+        return True
 
 
 def create_other_actions(client):
