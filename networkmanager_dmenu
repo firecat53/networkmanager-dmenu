@@ -85,6 +85,8 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             del args_dict["pinentry"]
         if "compact" in args_dict:
             del args_dict["compact"]
+        if "wifi_chars" in args_dict:
+            del args_dict["wifi_chars"]
         if conf.has_option('dmenu', 'rofi_highlight'):
             rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
             del args_dict["rofi_highlight"]
