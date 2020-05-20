@@ -32,6 +32,7 @@ Requirements
 2. NetworkManager
 3. Dmenu. Basic support is included for Rofi_, but most Rofi
    configuration/theming should be done via Xresources or Rofi themes.
+   Besides Wofi_ has basic support.
 4. Python gobject (PyGObject, python-gobject, etc.)
 5. (Debian/Ubuntu based distros) libnm-util-dev and gir1.2-nm-1.0 (you have to
    explicitly install the latter on Debian Sid)
@@ -76,3 +77,4 @@ Usage
 .. _PolicyKit permissions: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 .. _AUR Package: https://aur.archlinux.org/packages/networkmanager-dmenu-git/
 .. _Rofi: https://davedavenport.github.io/rofi/
+.. _Wofi: https://hg.sr.ht/%7Escoopta/wofi
