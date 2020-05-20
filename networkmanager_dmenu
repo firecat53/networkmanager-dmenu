@@ -70,6 +70,8 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             # rofi doesn't support 0 length line, it requires at least -lines=1
             # see https://github.com/DaveDavenport/rofi/issues/252
             num_lines = num_lines or 1
+        elif "wofi" in dmenu_command:
+            lines = "-i --dmenu --lines"
         else:
             lines = "-i -l"
         if "l" in args_dict:
