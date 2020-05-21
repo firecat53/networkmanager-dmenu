@@ -174,7 +174,7 @@ def rescan_wifi():
     for dev in CLIENT.get_devices():
         if gi.repository.NM.DeviceWifi == type(dev):
             try:
-                dev.request_scan()
+                dev.request_scan_async()
             except gi.repository.GLib.Error as err:
                 # Too frequent rescan error
                 if not err.code == 6:  # pylint: disable=no-member
@@ -528,7 +528,7 @@ def delete_connection():
     """Display list of NM connections and delete the selected one
 
     """
-    conn_acts = [Action(i.get_id(), i.delete) for i in CONNS]
+    conn_acts = [Action(i.get_id(), i.delete_async) for i in CONNS]
     conn_names = "\n".join([str(i) for i in conn_acts]).encode(ENC)
     sel = Popen(dmenu_cmd(len(conn_acts), "CHOOSE CONNECTION TO DELETE:"),
                 stdin=PIPE,
@@ -619,7 +619,7 @@ def verify_conn(client, result, data):
         data.verify_secrets()
     except GLib.Error:  # pylint: disable=catching-non-exception
         try:
-            conn.delete()
+            conn.delete_async(None, None, None)
         except UnboundLocalError:
             pass
     finally:
