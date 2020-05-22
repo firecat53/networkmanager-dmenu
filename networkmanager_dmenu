@@ -453,8 +453,12 @@ def toggle_networking(enable):
 
     """
     toggle = GLib.Variant.new_tuple(GLib.Variant.new_boolean(enable))
-    CLIENT.dbus_call(NM.DBUS_PATH, NM.DBUS_INTERFACE, "Enable", toggle,
-                     None, -1, None, None, None)
+    try:
+        CLIENT.dbus_call(NM.DBUS_PATH, NM.DBUS_INTERFACE, "Enable", toggle,
+                         None, -1, None, None, None)
+    except AttributeError:
+        # Workaround for older versions of python-gobject
+        CLIENT.networking_set_enabled(enable)
 
 
 def toggle_wifi(enable):
@@ -464,8 +468,12 @@ def toggle_wifi(enable):
 
     """
     toggle = GLib.Variant.new_boolean(enable)
-    CLIENT.dbus_set_property(NM.DBUS_PATH, NM.DBUS_INTERFACE, "WirelessEnabled", toggle,
-                             -1, None, None, None)
+    try:
+        CLIENT.dbus_set_property(NM.DBUS_PATH, NM.DBUS_INTERFACE, "WirelessEnabled", toggle,
+                                 -1, None, None, None)
+    except AttributeError:
+        # Workaround for older versions of python-gobject
+        CLIENT.wireless_set_enabled(enable)
 
 
 def toggle_wwan(enable):
@@ -475,8 +483,12 @@ def toggle_wwan(enable):
 
     """
     toggle = GLib.Variant.new_boolean(enable)
-    CLIENT.dbus_set_property(NM.DBUS_PATH, NM.DBUS_INTERFACE, "WwanEnabled", toggle,
-                             -1, None, None, None)
+    try:
+        CLIENT.dbus_set_property(NM.DBUS_PATH, NM.DBUS_INTERFACE, "WwanEnabled", toggle,
+                                 -1, None, None, None)
+    except AttributeError:
+        # Workaround for older versions of python-gobject
+        CLIENT.wwan_set_enabled(enable)
 
 
 def launch_connection_editor():
@@ -671,7 +683,11 @@ def run():
         ap_actions = []
 
     vpns = [i for i in CONNS if i.is_type(NM.SETTING_VPN_SETTING_NAME)]
-    wgs = [i for i in CONNS if i.is_type(NM.SETTING_WIREGUARD_SETTING_NAME)]
+    try:
+        wgs = [i for i in CONNS if i.is_type(NM.SETTING_WIREGUARD_SETTING_NAME)]
+    except AttributeError:
+        # Workaround for older versions of python-gobject with no wireguard support
+        wgs = []
     eths = [i for i in CONNS if i.is_type(NM.SETTING_WIRED_SETTING_NAME)]
     blues = [i for i in CONNS if i.is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
 
