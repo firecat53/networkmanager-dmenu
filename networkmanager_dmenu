@@ -34,6 +34,8 @@ CLIENT = NM.Client.new(None)
 LOOP = GLib.MainLoop()
 CONNS = CLIENT.get_connections()
 
+CONF = configparser.ConfigParser()
+CONF.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
 
 def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disable=too-many-branches
     """Parse config.ini if it exists and add options to the dmenu command
@@ -45,14 +47,12 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
 
     """
     dmenu_command = "dmenu"
-    conf = configparser.ConfigParser()
-    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    if not conf.sections():
+    if not CONF.sections():
         res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
         res.extend(sys.argv[1:])
         return res
-    if conf.has_section('dmenu'):
-        args = conf.items('dmenu')
+    if CONF.has_section('dmenu'):
+        args = CONF.items('dmenu')
         args_dict = dict(args)
         dmenu_args = []
         if "dmenu_command" in args_dict:
@@ -87,22 +87,19 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             del args_dict["compact"]
         if "wifi_chars" in args_dict:
             del args_dict["wifi_chars"]
-        if conf.has_option('dmenu', 'rofi_highlight'):
-            rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight')
+        rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
+        if CONF.has_option('dmenu', 'rofi_highlight'):
             del args_dict["rofi_highlight"]
-        else:
-            rofi_highlight = False
         if rofi_highlight is True and "rofi" in dmenu_command:
             if active_lines:
                 dmenu_args.extend(["-a", ",".join([str(num)
                                                    for num in active_lines])])
     if prompt == "Passphrase":
-        if conf.has_section('dmenu_passphrase'):
-            args = conf.items('dmenu_passphrase')
+        if CONF.has_section('dmenu_passphrase'):
+            args = CONF.items('dmenu_passphrase')
             args_dict.update(args)
-        rofi_obscure = True
-        if conf.has_option('dmenu_passphrase', 'rofi_obscure'):
-            rofi_obscure = conf.getboolean('dmenu_passphrase', 'rofi_obscure')
+        rofi_obscure = CONF.getboolean('dmenu_passphrase', 'rofi_obscure', fallback=True)
+        if CONF.has_option('dmenu_passphrase', 'rofi_obscure'):
             del args_dict["rofi_obscure"]
         if rofi_obscure is True and "rofi" in dmenu_command:
             dmenu_args.extend(["-password"])
@@ -276,8 +273,6 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
     (activate/deactivate)
 
     """
-    conf = configparser.ConfigParser()
-    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
     active_ap_bssid = active_ap.get_bssid() if active_ap is not None else ""
 
     names = [ssid_to_utf8(ap) for ap in aps]
@@ -289,13 +284,11 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
 
     for nm_ap, name, sec in zip(aps, names, secs):
         bars = NM.utils_wifi_strength_bars(nm_ap.get_strength())
-        wifi_chars = conf.get("dmenu", "wifi_chars") \
-            if conf.has_option("dmenu", "wifi_chars") else False
+        wifi_chars = CONF.get("dmenu", "wifi_chars", fallback=False)
         if wifi_chars:
             bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == '*'])
         is_active = nm_ap.get_bssid() == active_ap_bssid
-        compact = conf.getboolean("dmenu", "compact") \
-            if conf.has_option('dmenu', 'compact') else False
+        compact = CONF.getboolean("dmenu", "compact", fallback=False)
         if compact:
             action_name = u"{}  {}  {}".format(name, sec, bars)
         else:
@@ -408,12 +401,8 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
                  others: list of Actions
 
     """
-    conf = configparser.ConfigParser()
-    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    rofi_highlight = conf.getboolean('dmenu', 'rofi_highlight') \
-        if conf.has_option('dmenu', 'rofi_highlight') else False
-    compact = conf.getboolean("dmenu", "compact") \
-        if conf.has_option('dmenu', 'compact') else False
+    rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
+    compact = CONF.getboolean("dmenu", "compact", fallback=False)
     inp = []
     empty_action = [Action('', None)] if not compact else []
     all_actions = []
@@ -494,17 +483,9 @@ def launch_connection_editor():
     """Launch nmtui or the gui nm-connection-editor
 
     """
-    conf = configparser.ConfigParser()
-    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    if conf.has_option("editor", "terminal"):
-        terminal = conf.get("editor", "terminal")
-    else:
-        terminal = "xterm"
-    if conf.has_option("editor", "gui_if_available"):
-        gui_if_available = conf.get("editor", "gui_if_available")
-    else:
-        gui_if_available = "True"
-    if gui_if_available == "True":
+    terminal = CONF.get("editor", "terminal", fallback="xterm")
+    gui_if_available = CONF.getboolean("editor", "gui_if_available", fallback=True)
+    if gui_if_available is True:
         try:
             Popen(["nm-connection-editor"]).communicate()
         except OSError:
@@ -519,12 +500,7 @@ def get_passphrase():
     Returns: string
 
     """
-
-    conf = configparser.ConfigParser()
-    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    pinentry = None
-    if conf.has_option("dmenu", "pinentry"):
-        pinentry = conf.get("dmenu", "pinentry")
+    pinentry = CONF.get("dmenu", "pinentry", fallback=None)
     if pinentry:
         pin = ""
         out = Popen(pinentry,
@@ -714,9 +690,7 @@ def run():
         wwan_actions = []
 
     saved_actions = None
-    conf = configparser.ConfigParser()
-    conf.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
-    list_saved = conf.getboolean('dmenu', 'list_saved', fallback=False)
+    list_saved = CONF.getboolean('dmenu', 'list_saved', fallback=False)
     saved_actions = []
     if list_saved:
         saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]

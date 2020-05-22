@@ -25,7 +25,7 @@ fn = SourceCodePro-11
 # # -password option (rofi) to obscure passphrase entry
 # nf = #222222
 # nb = #222222
-# rofi_obscure = True
+# rofi_obscure = <True or False> (Default: True) Obscure passwords when typing
 
 # [editor]
 # terminal = <name of terminal program>
