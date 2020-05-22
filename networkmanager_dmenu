@@ -454,7 +454,9 @@ def toggle_networking(enable):
     Args: enable - boolean
 
     """
-    CLIENT.networking_set_enabled(enable)
+    toggle = GLib.Variant.new_tuple(GLib.Variant.new_boolean(enable))
+    CLIENT.dbus_call(NM.DBUS_PATH, NM.DBUS_INTERFACE, "Enable", toggle,
+                     None, -1, None, None, None)
 
 
 def toggle_wifi(enable):
@@ -463,7 +465,9 @@ def toggle_wifi(enable):
     Args: enable - boolean
 
     """
-    CLIENT.wireless_set_enabled(enable)
+    toggle = GLib.Variant.new_boolean(enable)
+    CLIENT.dbus_set_property(NM.DBUS_PATH, NM.DBUS_INTERFACE, "WirelessEnabled", toggle,
+                             -1, None, None, None)
 
 
 def toggle_wwan(enable):
@@ -472,7 +476,9 @@ def toggle_wwan(enable):
     Args: enable - boolean
 
     """
-    CLIENT.wwan_set_enabled(enable)
+    toggle = GLib.Variant.new_boolean(enable)
+    CLIENT.dbus_set_property(NM.DBUS_PATH, NM.DBUS_INTERFACE, "WwanEnabled", toggle,
+                             -1, None, None, None)
 
 
 def launch_connection_editor():
