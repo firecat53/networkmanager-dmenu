@@ -19,6 +19,7 @@ Features
 - Optional Pinentry support for secure passphrase entry
 - Delete existing connections
 - Rescan wifi networks
+- Uses notify-send for notifications if available
 
 License
 -------
@@ -40,6 +41,7 @@ Requirements
 7. (optional) Pinentry. Make sure to set which flavor of pinentry command to use
    in the config file.
 8. (optional) ModemManager for WWAN support.
+9. (optional) notify-send for notifications (connected, disconnected, etc.)
 
 Installation
 ------------
