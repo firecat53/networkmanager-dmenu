@@ -284,7 +284,7 @@ def activate_cb(dev, res, data):
     except GLib.Error:
         conn = None
     if conn is not None:
-        notify("Connection {} activated successfully".format(conn.get_id()))
+        notify("Activated {}".format(conn.get_id()))
     else:
         notify("Problem activating {}".format(data.get_id()))
     LOOP.quit()
@@ -295,7 +295,7 @@ def deactivate_cb(dev, res, data):
 
     """
     if dev.deactivate_connection_finish(res) is True:
-        notify("Connection {} deactivated successfully".format(data.get_id()))
+        notify("Deactivated {}".format(data.get_id()))
     else:
         notify("Problem deactivating {}".format(data.get_id()))
     LOOP.quit()
@@ -596,7 +596,7 @@ def delete_cb(dev, res, data):
 
     """
     if dev.delete_finish(res) is True:
-        notify("Connection {} deleted successfully".format(dev.get_id()))
+        notify("Deleted {}".format(dev.get_id()))
     else:
         notify("Problem deleting {}".format(dev.get_id()))
     LOOP.quit()
@@ -679,7 +679,7 @@ def verify_conn(client, result, data):
                     data.verify(),
                     data.verify_secrets()]):
             raise GLib.Error
-        notify("Connection added: {}".format(conn.get_id()))
+        notify("Added {}".format(conn.get_id()))
     except GLib.Error:  # pylint: disable=catching-non-exception
         try:
             notify("Connection to {} failed".format(conn.get_id()))
