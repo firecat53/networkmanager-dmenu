@@ -21,11 +21,13 @@ fn = SourceCodePro-11
 # list_saved = <True or False> # (Default: False) list saved connections
 
 # [dmenu_passphrase]
-# # override normal foreground and background colors (dmenu) or use the
-# # -password option (rofi) to obscure passphrase entry
+# override normal foreground and background colors, use the -P option along
+# with the Suckless dmenu password patch or use the -password option (rofi) to
+# obscure passphrase entry.
 # nf = #222222
 # nb = #222222
 # rofi_obscure = <True or False> (Default: True) Obscure passwords when typing
+# dmenu_password = <True or False> (Default: False) Use the -P option for dmenu (you need the appropriate dmenu patch!)
 
 # [editor]
 # terminal = <name of terminal program>
