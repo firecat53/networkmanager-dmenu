@@ -103,7 +103,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
             del args_dict["rofi_obscure"]
         if rofi_obscure is True and "rofi" in dmenu_command:
             dmenu_args.extend(["-password"])
-        dmenu_password = CONF.getboolean('dmenu_passphrase', 'dmenu_password', fallback=True)
+        dmenu_password = CONF.getboolean('dmenu_passphrase', 'dmenu_password', fallback=False)
         if CONF.has_option('dmenu_passphrase', 'dmenu_password'):
             del args_dict["dmenu_password"]
         if dmenu_password is True:
