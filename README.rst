@@ -31,7 +31,8 @@ Requirements
 1. Python 3.2+
 2. NetworkManager
 3. Dmenu. Basic support is included for Rofi_, but most Rofi
-   configuration/theming should be done via Xresources or Rofi themes.
+   configuration/theming should be done via Xresources or Rofi themes. The
+   `Suckless password patch`_ is supported if desired.
 4. Python gobject (PyGObject, python-gobject, etc.)
 5. (Debian/Ubuntu based distros) libnm-util-dev and gir1.2-nm-1.0 (you have to
    explicitly install the latter on Debian Sid)
@@ -53,7 +54,8 @@ Installation
 - If using dmenu for passphrase entry (pinentry not set), dmenu options in the
   [dmenu_passphrase] section of config.ini will override those in [dmenu] so you
   can, for example, set the normal foreground and background colors to be the
-  same to obscure the passphrase.
+  same to obscure the passphrase. The `Suckless password patch`_ `-P` option is
+  supported if that patch is installed.
 - Set default terminal (xterm, urxvtc, etc.) command in config.ini if desired.
 - If using Rofi, you can try some of the command line options in config.ini or
   set them using the `dmenu_command` setting, but I haven't tested most of them
@@ -78,3 +80,4 @@ Usage
 .. _PolicyKit permissions: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 .. _AUR Package: https://aur.archlinux.org/packages/networkmanager-dmenu-git/
 .. _Rofi: https://davedavenport.github.io/rofi/
+.. _Suckless password patch: https://tools.suckless.org/dmenu/patches/password/
