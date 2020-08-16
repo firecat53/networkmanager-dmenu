@@ -550,9 +550,12 @@ def launch_connection_editor():
     gui_if_available = CONF.getboolean("editor", "gui_if_available", fallback=True)
     if gui_if_available is True:
         try:
-            Popen(["nm-connection-editor"]).communicate()
+            Popen(["gnome-control-center", "network"]).communicate()
         except OSError:
-            Popen([terminal, "-e", "nmtui"]).communicate()
+            try:
+                Popen(["nm-connection-editor"]).communicate()
+            except OSError:
+                Popen([terminal, "-e", "nmtui"]).communicate()
     else:
         Popen([terminal, "-e", "nmtui"]).communicate()
 
