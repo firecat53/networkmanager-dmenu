@@ -20,6 +20,7 @@ from os.path import expanduser
 import shlex
 import sys
 import uuid
+import functools
 from subprocess import Popen, PIPE
 
 import gi
@@ -203,6 +204,13 @@ def ssid_to_utf8(nm_ap):
         return ""
     ret = NM.utils_ssid_to_utf8(ssid.get_data())
     return ret
+
+
+def prompt_saved(saved_cons):
+    """Prompt for a saved connection."""
+    actions = create_saved_actions(saved_cons)
+    sel = get_selection(actions)
+    sel()
 
 
 def ap_security(nm_ap):
@@ -789,12 +797,13 @@ def run():
         gsm_actions = []
         wwan_actions = []
 
-    saved_actions = None
     list_saved = CONF.getboolean('dmenu', 'list_saved', fallback=False)
-    saved_actions = []
+    saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]
     if list_saved:
-        saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]
         saved_actions = create_saved_actions(saved_cons)
+    else:
+        saved_actions = [Action("Saved connections",
+                                functools.partial(prompt_saved, saved_cons))]
 
     actions = combine_actions(eth_actions, ap_actions, vpn_actions, wg_actions,
                               gsm_actions, blue_actions, wwan_actions,
