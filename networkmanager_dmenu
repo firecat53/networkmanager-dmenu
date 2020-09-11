@@ -20,6 +20,7 @@ from os.path import expanduser
 import shlex
 import sys
 import uuid
+import functools
 from subprocess import Popen, PIPE
 
 import gi
@@ -203,6 +204,13 @@ def ssid_to_utf8(nm_ap):
         return ""
     ret = NM.utils_ssid_to_utf8(ssid.get_data())
     return ret
+
+
+def prompt_saved(saved_cons):
+    """Prompt for a saved connection."""
+    actions = create_saved_actions(saved_cons)
+    sel = get_selection(actions)
+    sel()
 
 
 def ap_security(nm_ap):
@@ -436,9 +444,8 @@ def create_wwan_actions(client):
     return [Action("{} WWAN".format(wwan_action), toggle_wwan, not wwan_enabled)]
 
 
-def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
-    """Combine the arg lists and send to dmenu for selection.
-    Also executes the associated action.
+def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
+    """Combine all given actions into a list of actions.
 
     Args: args - eths: list of Actions
                  aps: list of Actions
@@ -447,11 +454,8 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
                  blues: list of Actions
                  wwan: list of Actions
                  others: list of Actions
-
     """
-    rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
     compact = CONF.getboolean("dmenu", "compact", fallback=False)
-    inp = []
     empty_action = [Action('', None)] if not compact else []
     all_actions = []
     all_actions += eths + empty_action if eths else []
@@ -463,6 +467,13 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
     all_actions += wwan + empty_action if wwan else []
     all_actions += others + empty_action if others else []
     all_actions += saved + empty_action if saved else []
+    return all_actions
+
+
+def get_selection(all_actions):
+    """Spawn dmenu for selection and execute the associated action."""
+    rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
+    inp = []
 
     if rofi_highlight is True:
         inp = [str(action) for action in all_actions]
@@ -481,14 +492,13 @@ def get_selection(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
         sys.exit()
 
     if rofi_highlight is False:
-        action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others + saved
+        action = [i for i in all_actions
                   if ((str(i).strip() == str(sel.strip())
                        and not i.is_active) or
                       ('== ' + str(i) == str(sel.rstrip('\n'))
                        and i.is_active))]
     else:
-        action = [i for i in eths + aps + vpns + wgs + gsms + blues + wwan + others + saved
-                  if str(i).strip() == sel.strip()]
+        action = [i for i in all_actions if str(i).strip() == sel.strip()]
     assert len(action) == 1, \
         u"Selection was ambiguous: '{}'".format(str(sel.strip()))
     return action[0]
@@ -787,15 +797,18 @@ def run():
         gsm_actions = []
         wwan_actions = []
 
-    saved_actions = None
     list_saved = CONF.getboolean('dmenu', 'list_saved', fallback=False)
-    saved_actions = []
+    saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]
     if list_saved:
-        saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]
         saved_actions = create_saved_actions(saved_cons)
+    else:
+        saved_actions = [Action("Saved connections",
+                                functools.partial(prompt_saved, saved_cons))]
 
-    sel = get_selection(eth_actions, ap_actions, vpn_actions, wg_actions,
-                        gsm_actions, blue_actions, wwan_actions, other_actions, saved_actions)
+    actions = combine_actions(eth_actions, ap_actions, vpn_actions, wg_actions,
+                              gsm_actions, blue_actions, wwan_actions,
+                              other_actions, saved_actions)
+    sel = get_selection(actions)
     sel()
 
 

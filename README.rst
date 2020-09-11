@@ -63,7 +63,8 @@ Installation
   set them using the `dmenu_command` setting, but I haven't tested most of them
   so I'd suggest configuring via .Xresources where possible. 
 - Saved connections can be listed if desired. Set `list_saved = True` under
-  `[dmenu]` in config.ini.
+  `[dmenu]` in config.ini. If set to `False`, saved connections are still
+  accessible under a "Saved connections" sub-menu.
 - If desired, copy the networkmanager_dmenu.desktop to /usr/share/applications
   or ~/.local/share/applications.
 - If you want to run the script as $USER instead of ROOT, set `PolicyKit
