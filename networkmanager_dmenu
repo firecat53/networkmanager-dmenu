@@ -20,7 +20,6 @@ from os.path import expanduser
 import shlex
 import sys
 import uuid
-import functools
 from subprocess import Popen, PIPE
 
 import gi
@@ -802,8 +801,7 @@ def run():
     if list_saved:
         saved_actions = create_saved_actions(saved_cons)
     else:
-        saved_actions = [Action("Saved connections",
-                                functools.partial(prompt_saved, saved_cons))]
+        saved_actions = [Action("Saved connections", prompt_saved, [saved_cons])]
 
     actions = combine_actions(eth_actions, ap_actions, vpn_actions, wg_actions,
                               gsm_actions, blue_actions, wwan_actions,
