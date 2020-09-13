@@ -12,6 +12,8 @@ Add dmenu formatting options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
+import pathlib
+import struct
 import configparser
 import itertools
 import locale
@@ -151,20 +153,40 @@ def is_modemmanager_installed():
         return True
 
 
+def bluetooth_get_enabled():
+    """Check if bluetooth is enabled via rfkill.
+
+    Returns None if no bluetooth device was found.
+    """
+    # See https://www.kernel.org/doc/Documentation/ABI/stable/sysfs-class-rfkill
+    for path in pathlib.Path('/sys/class/rfkill/').glob('rfkill*'):
+        if (path / 'type').read_text().strip() == 'bluetooth':
+            return (path / 'soft').read_text().strip() == '0'
+    return None
+
+
 def create_other_actions(client):
     """Return list of other actions that can be taken
 
     """
     networking_enabled = client.networking_get_enabled()
     networking_action = "Disable" if networking_enabled else "Enable"
+
     wifi_enabled = client.wireless_get_enabled()
     wifi_action = "Disable" if wifi_enabled else "Enable"
+
+    bluetooth_enabled = bluetooth_get_enabled()
+    bluetooth_action = "Disable" if bluetooth_enabled else "Enable"
+
     actions = [Action("{} Wifi".format(wifi_action), toggle_wifi,
                       not wifi_enabled),
                Action("{} Networking".format(networking_action),
-                      toggle_networking, not networking_enabled),
-               Action("Launch Connection Manager", launch_connection_editor),
-               Action("Delete a Connection", delete_connection)]
+                      toggle_networking, not networking_enabled)]
+    if bluetooth_enabled is not None:
+        actions.append(Action("{} Bluetooth".format(bluetooth_action),
+                       toggle_bluetooth, not bluetooth_enabled))
+    actions += [Action("Launch Connection Manager", launch_connection_editor),
+                Action("Delete a Connection", delete_connection)]
     if wifi_enabled:
         actions.append(Action("Rescan Wifi Networks", rescan_wifi))
     return actions
@@ -550,6 +572,29 @@ def toggle_wwan(enable):
         # Workaround for older versions of python-gobject
         CLIENT.wwan_set_enabled(enable)
     notify("Wwan {}".format("enabled" if enable is True else "disabled"))
+
+
+def toggle_bluetooth(enable):
+    """Enable/disable Bluetooth
+
+    Args: enable - boolean
+    """
+    # References:
+    # https://github.com/blueman-project/blueman/blob/master/blueman/plugins/mechanism/RfKill.py
+    # https://www.kernel.org/doc/html/latest/driver-api/rfkill.html
+    # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/linux/rfkill.h?h=v5.8.9
+    TYPE_BLUETOOTH = 2
+    OP_CHANGE_ALL = 3
+    idx = 0
+    soft_state = 0 if enable else 1
+    hard_state = 0
+
+    data = struct.pack("IBBBB", idx, TYPE_BLUETOOTH, OP_CHANGE_ALL,
+                       soft_state, hard_state)
+    with open('/dev/rfkill', 'r+b', buffering=0) as f:
+        f.write(data)
+
+    notify("Bluetooth {}".format("enabled" if enable else "disabled"))
 
 
 def launch_connection_editor():
