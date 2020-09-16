@@ -203,7 +203,7 @@ def rescan_wifi():
                 LOOP.run()
             except gi.repository.GLib.Error as err:
                 # Too frequent rescan error
-                notify("Wifi rescan failed")
+                notify("Wifi rescan failed", urgency="critical")
                 if not err.code == 6:  # pylint: disable=no-member
                     raise err
 
@@ -215,7 +215,7 @@ def rescan_cb(dev, res, data):
     if dev.request_scan_finish(res) is True:
         notify("Wifi scan complete")
     else:
-        notify("Wifi scan failed")
+        notify("Wifi scan failed", urgency="critical")
     LOOP.quit()
 
 
@@ -321,7 +321,8 @@ def activate_cb(dev, res, data):
     if conn is not None:
         notify("Activated {}".format(conn.get_id()))
     else:
-        notify("Problem activating {}".format(data.get_id()))
+        notify("Problem activating {}".format(data.get_id()),
+                urgency="critical")
     LOOP.quit()
 
 
@@ -332,7 +333,8 @@ def deactivate_cb(dev, res, data):
     if dev.deactivate_connection_finish(res) is True:
         notify("Deactivated {}".format(data.get_id()))
     else:
-        notify("Problem deactivating {}".format(data.get_id()))
+        notify("Problem deactivating {}".format(data.get_id()),
+                urgency="critical")
     LOOP.quit()
 
 
@@ -661,7 +663,7 @@ def delete_cb(dev, res, data):
     if dev.delete_finish(res) is True:
         notify("Deleted {}".format(dev.get_id()))
     else:
-        notify("Problem deleting {}".format(dev.get_id()))
+        notify("Problem deleting {}".format(dev.get_id()), urgency="critical")
     LOOP.quit()
 
 
@@ -745,7 +747,8 @@ def verify_conn(client, result, data):
         notify("Added {}".format(conn.get_id()))
     except GLib.Error:  # pylint: disable=catching-non-exception
         try:
-            notify("Connection to {} failed".format(conn.get_id()))
+            notify("Connection to {} failed".format(conn.get_id()),
+                    urgency="critical")
             conn.delete_async(None, None, None)
         except UnboundLocalError:
             pass
