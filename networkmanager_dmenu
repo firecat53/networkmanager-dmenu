@@ -797,14 +797,16 @@ def create_ap_list(adapter, active_connections):
     return aps, active_ap, active_ap_con, adapter
 
 
-def notify(string):
+def notify(message, details=None, urgency="low"):
     """Use notify-send if available for notifications
 
     """
+    args = ["-u", urgency, message]
+    if details is not None:
+        args.append(details)
+
     try:
-        Popen(["notify-send",
-               "-u", "low",
-               "{}".format(string)],
+        Popen(["notify-send"] + args,
               stdout=PIPE, stderr=PIPE).communicate()
     except FileNotFoundError:
         pass
