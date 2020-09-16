@@ -593,10 +593,16 @@ def toggle_bluetooth(enable):
 
     data = struct.pack("IBBBB", idx, TYPE_BLUETOOTH, OP_CHANGE_ALL,
                        soft_state, hard_state)
-    with open('/dev/rfkill', 'r+b', buffering=0) as f:
-        f.write(data)
 
-    notify("Bluetooth {}".format("enabled" if enable else "disabled"))
+    try:
+        with open('/dev/rfkill', 'r+b', buffering=0) as f:
+            f.write(data)
+    except PermissionError:
+        notify("Lacking permission to write to /dev/rfkill.",
+               "Maybe you need to add your user to the 'rfkill' group?",
+               urgency="critical")
+    else:
+        notify("Bluetooth {}".format("enabled" if enable else "disabled"))
 
 
 def launch_connection_editor():
