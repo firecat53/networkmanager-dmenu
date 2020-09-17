@@ -183,7 +183,7 @@ def create_other_actions(client):
                       toggle_networking, not networking_enabled)]
     if bluetooth_enabled is not None:
         actions.append(Action("{} Bluetooth".format(bluetooth_action),
-                       toggle_bluetooth, not bluetooth_enabled))
+                              toggle_bluetooth, not bluetooth_enabled))
     actions += [Action("Launch Connection Manager", launch_connection_editor),
                 Action("Delete a Connection", delete_connection)]
     if wifi_enabled:
@@ -321,7 +321,7 @@ def activate_cb(dev, res, data):
         notify("Activated {}".format(conn.get_id()))
     else:
         notify("Problem activating {}".format(data.get_id()),
-                urgency="critical")
+               urgency="critical")
     LOOP.quit()
 
 
@@ -333,7 +333,7 @@ def deactivate_cb(dev, res, data):
         notify("Deactivated {}".format(data.get_id()))
     else:
         notify("Problem deactivating {}".format(data.get_id()),
-                urgency="critical")
+               urgency="critical")
     LOOP.quit()
 
 
@@ -579,23 +579,25 @@ def toggle_bluetooth(enable):
     """Enable/disable Bluetooth
 
     Args: enable - boolean
+
+    References:
+    https://github.com/blueman-project/blueman/blob/master/blueman/plugins/mechanism/RfKill.py
+    https://www.kernel.org/doc/html/latest/driver-api/rfkill.html
+    https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/linux/rfkill.h?h=v5.8.9
+
     """
-    # References:
-    # https://github.com/blueman-project/blueman/blob/master/blueman/plugins/mechanism/RfKill.py
-    # https://www.kernel.org/doc/html/latest/driver-api/rfkill.html
-    # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/linux/rfkill.h?h=v5.8.9
-    TYPE_BLUETOOTH = 2
-    OP_CHANGE_ALL = 3
+    type_bluetooth = 2
+    op_change_all = 3
     idx = 0
     soft_state = 0 if enable else 1
     hard_state = 0
 
-    data = struct.pack("IBBBB", idx, TYPE_BLUETOOTH, OP_CHANGE_ALL,
+    data = struct.pack("IBBBB", idx, type_bluetooth, op_change_all,
                        soft_state, hard_state)
 
     try:
-        with open('/dev/rfkill', 'r+b', buffering=0) as f:
-            f.write(data)
+        with open('/dev/rfkill', 'r+b', buffering=0) as rff:
+            rff.write(data)
     except PermissionError:
         notify("Lacking permission to write to /dev/rfkill.",
                "Maybe you need to add your user to the 'rfkill' group?",
@@ -753,7 +755,7 @@ def verify_conn(client, result, data):
     except GLib.Error:  # pylint: disable=catching-non-exception
         try:
             notify("Connection to {} failed".format(conn.get_id()),
-                    urgency="critical")
+                   urgency="critical")
             conn.delete_async(None, None, None)
         except UnboundLocalError:
             pass
