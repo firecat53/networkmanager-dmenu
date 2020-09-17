@@ -12,6 +12,8 @@ Add dmenu formatting options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
+import pathlib
+import struct
 import configparser
 import itertools
 import locale
@@ -150,20 +152,40 @@ def is_modemmanager_installed():
         return True
 
 
+def bluetooth_get_enabled():
+    """Check if bluetooth is enabled via rfkill.
+
+    Returns None if no bluetooth device was found.
+    """
+    # See https://www.kernel.org/doc/Documentation/ABI/stable/sysfs-class-rfkill
+    for path in pathlib.Path('/sys/class/rfkill/').glob('rfkill*'):
+        if (path / 'type').read_text().strip() == 'bluetooth':
+            return (path / 'soft').read_text().strip() == '0'
+    return None
+
+
 def create_other_actions(client):
     """Return list of other actions that can be taken
 
     """
     networking_enabled = client.networking_get_enabled()
     networking_action = "Disable" if networking_enabled else "Enable"
+
     wifi_enabled = client.wireless_get_enabled()
     wifi_action = "Disable" if wifi_enabled else "Enable"
+
+    bluetooth_enabled = bluetooth_get_enabled()
+    bluetooth_action = "Disable" if bluetooth_enabled else "Enable"
+
     actions = [Action("{} Wifi".format(wifi_action), toggle_wifi,
                       not wifi_enabled),
                Action("{} Networking".format(networking_action),
-                      toggle_networking, not networking_enabled),
-               Action("Launch Connection Manager", launch_connection_editor),
-               Action("Delete a Connection", delete_connection)]
+                      toggle_networking, not networking_enabled)]
+    if bluetooth_enabled is not None:
+        actions.append(Action("{} Bluetooth".format(bluetooth_action),
+                              toggle_bluetooth, not bluetooth_enabled))
+    actions += [Action("Launch Connection Manager", launch_connection_editor),
+                Action("Delete a Connection", delete_connection)]
     if wifi_enabled:
         actions.append(Action("Rescan Wifi Networks", rescan_wifi))
     return actions
@@ -180,7 +202,7 @@ def rescan_wifi():
                 LOOP.run()
             except gi.repository.GLib.Error as err:
                 # Too frequent rescan error
-                notify("Wifi rescan failed")
+                notify("Wifi rescan failed", urgency="critical")
                 if not err.code == 6:  # pylint: disable=no-member
                     raise err
 
@@ -192,7 +214,7 @@ def rescan_cb(dev, res, data):
     if dev.request_scan_finish(res) is True:
         notify("Wifi scan complete")
     else:
-        notify("Wifi scan failed")
+        notify("Wifi scan failed", urgency="critical")
     LOOP.quit()
 
 
@@ -298,7 +320,8 @@ def activate_cb(dev, res, data):
     if conn is not None:
         notify("Activated {}".format(conn.get_id()))
     else:
-        notify("Problem activating {}".format(data.get_id()))
+        notify("Problem activating {}".format(data.get_id()),
+               urgency="critical")
     LOOP.quit()
 
 
@@ -309,7 +332,8 @@ def deactivate_cb(dev, res, data):
     if dev.deactivate_connection_finish(res) is True:
         notify("Deactivated {}".format(data.get_id()))
     else:
-        notify("Problem deactivating {}".format(data.get_id()))
+        notify("Problem deactivating {}".format(data.get_id()),
+               urgency="critical")
     LOOP.quit()
 
 
@@ -551,6 +575,37 @@ def toggle_wwan(enable):
     notify("Wwan {}".format("enabled" if enable is True else "disabled"))
 
 
+def toggle_bluetooth(enable):
+    """Enable/disable Bluetooth
+
+    Args: enable - boolean
+
+    References:
+    https://github.com/blueman-project/blueman/blob/master/blueman/plugins/mechanism/RfKill.py
+    https://www.kernel.org/doc/html/latest/driver-api/rfkill.html
+    https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/linux/rfkill.h?h=v5.8.9
+
+    """
+    type_bluetooth = 2
+    op_change_all = 3
+    idx = 0
+    soft_state = 0 if enable else 1
+    hard_state = 0
+
+    data = struct.pack("IBBBB", idx, type_bluetooth, op_change_all,
+                       soft_state, hard_state)
+
+    try:
+        with open('/dev/rfkill', 'r+b', buffering=0) as rff:
+            rff.write(data)
+    except PermissionError:
+        notify("Lacking permission to write to /dev/rfkill.",
+               "Maybe you need to add your user to the 'rfkill' group?",
+               urgency="critical")
+    else:
+        notify("Bluetooth {}".format("enabled" if enable else "disabled"))
+
+
 def launch_connection_editor():
     """Launch nmtui or the gui nm-connection-editor
 
@@ -615,7 +670,7 @@ def delete_cb(dev, res, data):
     if dev.delete_finish(res) is True:
         notify("Deleted {}".format(dev.get_id()))
     else:
-        notify("Problem deleting {}".format(dev.get_id()))
+        notify("Problem deleting {}".format(dev.get_id()), urgency="critical")
     LOOP.quit()
 
 
@@ -699,7 +754,8 @@ def verify_conn(client, result, data):
         notify("Added {}".format(conn.get_id()))
     except GLib.Error:  # pylint: disable=catching-non-exception
         try:
-            notify("Connection to {} failed".format(conn.get_id()))
+            notify("Connection to {} failed".format(conn.get_id()),
+                   urgency="critical")
             conn.delete_async(None, None, None)
         except UnboundLocalError:
             pass
@@ -751,14 +807,16 @@ def create_ap_list(adapter, active_connections):
     return aps, active_ap, active_ap_con, adapter
 
 
-def notify(string):
+def notify(message, details=None, urgency="low"):
     """Use notify-send if available for notifications
 
     """
+    args = ["-u", urgency, message]
+    if details is not None:
+        args.append(details)
+
     try:
-        Popen(["notify-send",
-               "-u", "low",
-               "{}".format(string)],
+        Popen(["notify-send"] + args,
               stdout=PIPE, stderr=PIPE).communicate()
     except FileNotFoundError:
         pass
