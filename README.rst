@@ -47,7 +47,7 @@ Requirements
 Installation
 ------------
 
-- Copy script somewhere in $PATH OR install Archlinux `AUR package`_
+- Copy script somewhere in $PATH OR install Archlinux `AUR package`_ OR add the `Woomy-Overlay`_ gentoo overlay and install networkmanager-dmenu
 - Set your dmenu_command in config.ini if it's not 'dmenu' (for example
   dmenu_run or rofi). The alternate command should still respect the -l, -p and
   -i flags.
@@ -84,3 +84,4 @@ Usage
 .. _AUR Package: https://aur.archlinux.org/packages/networkmanager-dmenu-git/
 .. _Rofi: https://davedavenport.github.io/rofi/
 .. _Suckless password patch: https://tools.suckless.org/dmenu/patches/password/
+.. _Woomy-Overlay: https://github.com/Woomy4680-exe/Woomy-overlay
