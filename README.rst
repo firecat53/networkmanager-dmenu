@@ -11,9 +11,7 @@ Features
 - Connect to existing NetworkManager wifi or wired connections
 - Connect to new wifi connections. Requests passphrase if required
 - Connect to _existing_ VPN, Wireguard, GSM/WWAN and Bluetooth connections
-- Enable/Disable wifi
-- Enable/Disable WWAN
-- Enable/Disable networking
+- Enable/Disable wifi, WWAN, bluetooth and networking
 - Launch nm-connection-editor GUI
 - Support for multiple wifi adapters
 - Optional Pinentry support for secure passphrase entry
