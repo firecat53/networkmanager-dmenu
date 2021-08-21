@@ -837,7 +837,7 @@ def notify(message, details=None, urgency="low"):
     """Use notify-send if available for notifications
 
     """
-    args = ["-u", urgency, message]
+    args = ["-u", urgency, "-a", "networkmanager-dmenu", message]
     if details is not None:
         args.append(details)
 
