@@ -8,21 +8,20 @@ https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions
 
 OR running the script as root
 
-Add dmenu formatting options and default terminal if desired to
+Add dmenu options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
 """
 import pathlib
 import struct
 import configparser
-import itertools
 import locale
 import os
 from os.path import expanduser
 import shlex
 import sys
 import uuid
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, run
 
 import gi
 gi.require_version('NM', '1.0')
@@ -39,87 +38,65 @@ CONNS = CLIENT.get_connections()
 CONF = configparser.ConfigParser()
 CONF.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
 
+
+def cli_args():
+    """ Don't override dmenu_cmd function arguments with CLI args. Removes -l
+    and -p if those are passed on the command line.
+
+    Exception: if -l is passed and dmenu_command is not defined, assume that the
+    user wants to switch dmenu to the vertical layout and include -l.
+
+        Returns: List of additional CLI arguments
+
+    """
+    args = sys.argv[1:]
+    cmd = CONF.get('dmenu', 'dmenu_command', fallback=False)
+    if "-l" in args or "-p" in args:
+        for nope in ['-l', '-p'] if cmd is not False else ['-p']:
+            try:
+                nope_idx = args.index(nope)
+                del args[nope_idx]
+                del args[nope_idx]
+            except ValueError:
+                pass
+    return args
+
+
 def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disable=too-many-branches
-    """Parse config.ini if it exists and add options to the dmenu command
+    """Parse config.ini for menu options
 
     Args: args - num_lines: number of lines to display
                  prompt: prompt to show
-    Returns: command invocation (as a list of strings) for
-                dmenu -l <num_lines> -p <prompt> -i ...
+                 active_lines: list of line numbers to tag as active
+    Returns: command invocation (as a list of strings) for example
+                ["dmenu", "-l", "<num_lines>", "-p", "<prompt>", "-i"]
 
     """
-    dmenu_command = "dmenu"
-    if not CONF.sections():
-        res = [dmenu_command, "-i", "-l", str(num_lines), "-p", str(prompt)]
-        res.extend(sys.argv[1:])
-        return res
-    if CONF.has_section('dmenu'):
-        args = CONF.items('dmenu')
-        args_dict = dict(args)
-        dmenu_args = []
-        if "dmenu_command" in args_dict:
-            command = shlex.split(args_dict["dmenu_command"])
-            dmenu_command = command[0]
-            dmenu_args = command[1:]
-            del args_dict["dmenu_command"]
-        if "p" in args_dict and prompt == "Networks":
-            prompt = args_dict["p"]
-            del args_dict["p"]
-        elif "p" in args_dict:
-            del args_dict["p"]
-        if "rofi" in dmenu_command:
-            lines = "-i -dmenu -lines"
-            # rofi doesn't support 0 length line, it requires at least -lines=1
-            # see https://github.com/DaveDavenport/rofi/issues/252
-            num_lines = num_lines or 1
-        else:
-            lines = "-i -l"
-        if "l" in args_dict:
-            # rofi doesn't support 0 length line, it requires at least -lines=1
-            # see https://github.com/DaveDavenport/rofi/issues/252
-            if "rofi" in dmenu_command:
-                args_dict['l'] = min(num_lines, int(args_dict['l'])) or 1
-            lines = "{} {}".format(lines, args_dict['l'])
-            del args_dict['l']
-        else:
-            lines = "{} {}".format(lines, num_lines)
-        if "pinentry" in args_dict:
-            del args_dict["pinentry"]
-        if "compact" in args_dict:
-            del args_dict["compact"]
-        if "wifi_chars" in args_dict:
-            del args_dict["wifi_chars"]
-        rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
-        if CONF.has_option('dmenu', 'rofi_highlight'):
-            del args_dict["rofi_highlight"]
-        if rofi_highlight is True and "rofi" in dmenu_command:
-            if active_lines:
-                dmenu_args.extend(["-a", ",".join([str(num)
-                                                   for num in active_lines])])
-    if prompt == "Passphrase":
-        if CONF.has_section('dmenu_passphrase'):
-            args = CONF.items('dmenu_passphrase')
-            args_dict.update(args)
-        rofi_obscure = CONF.getboolean('dmenu_passphrase', 'rofi_obscure', fallback=True)
-        if CONF.has_option('dmenu_passphrase', 'rofi_obscure'):
-            del args_dict["rofi_obscure"]
-        if rofi_obscure is True and "rofi" in dmenu_command:
-            dmenu_args.extend(["-password"])
-        dmenu_password = CONF.getboolean('dmenu_passphrase', 'dmenu_password', fallback=False)
-        if CONF.has_option('dmenu_passphrase', 'dmenu_password'):
-            del args_dict["dmenu_password"]
-        if dmenu_password is True and "bemenu" in dmenu_command:
-            dmenu_args.extend(["-x"])
-        if dmenu_password is True and "dmenu" in dmenu_command:
-            dmenu_args.extend(["-P"])
-    extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
-    res = [dmenu_command, "-p", str(prompt)]
-    res.extend(dmenu_args)
-    res += list(itertools.chain.from_iterable(extras))
-    res[1:1] = lines.split()
-    res = list(filter(None, res))  # Remove empty list elements
-    res.extend(sys.argv[1:])
-    return res
+    commands = {"dmenu": ["-p", str(prompt)],
+                "rofi": ["-dmenu", "-p", str(prompt), "-l", str(num_lines)],
+                "bemenu": ["-p", str(prompt)]}
+    command = shlex.split(CONF.get('dmenu', 'dmenu_command', fallback="dmenu"))
+    command.extend(cli_args())
+    command.extend(commands.get(command[0], []))
+    # Rofi Highlighting
+    rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
+    if rofi_highlight is True and command[0] == "rofi" and active_lines:
+        command.extend(["-a", ",".join([str(num) for num in active_lines])])
+    # Passphrase prompts
+    obscure = CONF.getboolean('dmenu_passphrase', 'obscure', fallback=False)
+    if prompt == "Passphrase" and obscure is True:
+        obscure_color = CONF.get('dmenu_passphrase', 'obscure_color', fallback='#222222')
+        try:
+            # Check for dmenu password patch
+            dm_patch = b'bfivP' in run(["dmenu", "-h"], capture_output=True).stderr
+        except FileNotFoundError:
+            dm_patch = False
+        dmenu = ["-P"] if dm_patch else ["-nb", obscure_color, "-nf", obscure_color]
+        pass_prompts = {"dmenu": dmenu,
+                        "rofi": ['-password'],
+                        "bemenu": ['x']}
+        command.extend(pass_prompts.get(command[0], []))
+    return command
 
 
 def choose_adapter(client):
