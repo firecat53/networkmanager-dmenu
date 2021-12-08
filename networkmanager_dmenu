@@ -108,7 +108,9 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
         dmenu_password = CONF.getboolean('dmenu_passphrase', 'dmenu_password', fallback=False)
         if CONF.has_option('dmenu_passphrase', 'dmenu_password'):
             del args_dict["dmenu_password"]
-        if dmenu_password is True:
+        if dmenu_password is True and "bemenu" in dmenu_command:
+            dmenu_args.extend(["-x"])
+        if dmenu_password is True and "dmenu" in dmenu_command:
             dmenu_args.extend(["-P"])
     extras = (["-" + str(k), str(v)] for (k, v) in args_dict.items())
     res = [dmenu_command, "-p", str(prompt)]
