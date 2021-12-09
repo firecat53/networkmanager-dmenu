@@ -88,7 +88,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
         obscure_color = CONF.get('dmenu_passphrase', 'obscure_color', fallback='#222222')
         try:
             # Check for dmenu password patch
-            dm_patch = b'bfivP' in sprun(["dmenu", "-h"], check=False, capture_output=True).stderr
+            dm_patch = b'P' in sprun(["dmenu", "-h"], check=False, capture_output=True).stderr
         except FileNotFoundError:
             dm_patch = False
         dmenu = ["-P"] if dm_patch else ["-nb", obscure_color, "-nf", obscure_color]
