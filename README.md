@@ -2,6 +2,12 @@
 
 Manage NetworkManager connections with dmenu, [Rofi][1] or [Bemenu][2] instead of nm-applet
 
+**WARNING** _Two breaking changes 2021-12-08_
+
+1. _ALL_ menu configuration moved to `dmenu_command`, including `-i`. Note
+   options changed in config.ini.example
+2. Minimum Python version now 3.7
+
 ## Features
 
 - Connect to existing NetworkManager wifi or wired connections
