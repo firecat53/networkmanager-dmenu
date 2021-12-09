@@ -6,6 +6,7 @@
 # # `dmenu_command = dmenu -i -l 25 -b -nb #909090 -nf #303030`
 # rofi_highlight = <True or False> # (Default: False) use rofi highlighting instead of '=='
 # compact = <True or False> # (Default: False). Remove extra spacing from display
+# pinentry = <Pinentry command>  # (Default: None) e.g. `pinentry-gtk`
 # wifi_chars = <string of 4 unicode characters representing 1-4 bars strength>
 # wifi_chars = ▂▄▆█
 # list_saved = <True or False> # (Default: False) list saved connections
