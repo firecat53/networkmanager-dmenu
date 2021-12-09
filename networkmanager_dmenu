@@ -295,6 +295,7 @@ def process_ap(nm_ap, is_active, adapter):
     """Activate/Deactivate a connection and get password if required"""
     if is_active:
         CLIENT.deactivate_connection_async(nm_ap, None, deactivate_cb, nm_ap)
+        LOOP.run()
     else:
         conns_cur = [i for i in CONNS if
                      i.get_setting_wireless() is not None and
@@ -306,13 +307,13 @@ def process_ap(nm_ap, is_active, adapter):
         if len(con) == 1:
             CLIENT.activate_connection_async(con[0], adapter, nm_ap.get_path(),
                                              None, activate_cb, nm_ap)
+            LOOP.run()
         else:
             if ap_security(nm_ap) != "--":
                 password = get_passphrase()
             else:
                 password = ""
             set_new_connection(nm_ap, password, adapter)
-    LOOP.run()
 
 
 def activate_cb(dev, res, data):
