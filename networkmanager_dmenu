@@ -156,12 +156,12 @@ def create_other_actions(client):
     bluetooth_enabled = bluetooth_get_enabled()
     bluetooth_action = "Disable" if bluetooth_enabled else "Enable"
 
-    actions = [Action("{} Wifi".format(wifi_action), toggle_wifi,
+    actions = [Action(f"{wifi_action} Wifi", toggle_wifi,
                       not wifi_enabled),
-               Action("{} Networking".format(networking_action),
+               Action(f"{networking_action} Networking",
                       toggle_networking, not networking_enabled)]
     if bluetooth_enabled is not None:
-        actions.append(Action("{} Bluetooth".format(bluetooth_action),
+        actions.append(Action(f"{bluetooth_action} Bluetooth",
                               toggle_bluetooth, not bluetooth_enabled))
     actions += [Action("Launch Connection Manager", launch_connection_editor),
                 Action("Delete a Connection", delete_connection)]
@@ -325,10 +325,9 @@ def activate_cb(dev, res, data):
     except GLib.Error:
         conn = None
     if conn is not None:
-        notify("Activated {}".format(conn.get_id()))
+        notify(f"Activated {conn.get_id()}")
     else:
-        notify("Problem activating {}".format(data.get_id()),
-               urgency="critical")
+        notify(f"Problem activating {data.get_id()}", urgency="critical")
     LOOP.quit()
 
 
@@ -337,10 +336,9 @@ def deactivate_cb(dev, res, data):
 
     """
     if dev.deactivate_connection_finish(res) is True:
-        notify("Deactivated {}".format(data.get_id()))
+        notify(f"Deactivated {data.get_id()}")
     else:
-        notify("Problem deactivating {}".format(data.get_id()),
-               urgency="critical")
+        notify(f"Problem deactivating {data.get_id()}", urgency="critical")
     LOOP.quit()
 
 
@@ -376,10 +374,9 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: di
         is_active = nm_ap.get_bssid() == active_ap_bssid
         compact = CONF.getboolean("dmenu", "compact", fallback=False)
         if compact:
-            action_name = u"{}  {}  {}".format(name, sec, bars)
+            action_name = f"{name}  {sec}  {bars}"
         else:
-            action_name = u"{:<{}s}  {:<{}s}  {}".format(name, max_len_name, sec,
-                                                         max_len_sec, bars)
+            action_name = f"{name:<{max_len_name}s}  {sec:<{max_len_sec}s} {bars:>4}"
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
                                      [active_connection, True, adapter],
@@ -448,13 +445,12 @@ def _create_vpngsm_actions(cons, active_cons, label):
     actions = []
     for con in cons:
         is_active = con.get_id() in active_con_ids
-        action_name = u"{}:{}".format(con.get_id(), label)
+        action_name = f"{con.get_id()}:{label}"
         if is_active:
             active_connection = [a for a in active_cons
                                  if a.get_id() == con.get_id()]
             if len(active_connection) != 1:
-                raise ValueError(u"Multiple active connections match"
-                                 " the connection: {}".format(con.get_id()))
+                raise ValueError(f"Multiple active connections match {con.get_id()}")
             active_connection = active_connection[0]
 
             actions.append(Action(action_name, process_vpngsm,
@@ -471,7 +467,7 @@ def create_wwan_actions(client):
     """
     wwan_enabled = client.wwan_get_enabled()
     wwan_action = "Disable" if wwan_enabled else "Enable"
-    return [Action("{} WWAN".format(wwan_action), toggle_wwan, not wwan_enabled)]
+    return [Action(f"{wwan_action} WWAN", toggle_wwan, not wwan_enabled)]
 
 
 def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
@@ -532,8 +528,7 @@ def get_selection(all_actions):
                        and i.is_active))]
     else:
         action = [i for i in all_actions if str(i).strip() == sel.strip()]
-    assert len(action) == 1, \
-        u"Selection was ambiguous: '{}'".format(str(sel.strip()))
+    assert len(action) == 1, f"Selection was ambiguous: '{str(sel.strip())}'"
     return action[0]
 
 
@@ -550,7 +545,7 @@ def toggle_networking(enable):
     except AttributeError:
         # Workaround for older versions of python-gobject
         CLIENT.networking_set_enabled(enable)
-    notify("Networking {}".format("enabled" if enable is True else "disabled"))
+    notify(f"Networking {'enabled' if enable is True else 'disabled'}")
 
 
 def toggle_wifi(enable):
@@ -566,7 +561,7 @@ def toggle_wifi(enable):
     except AttributeError:
         # Workaround for older versions of python-gobject
         CLIENT.wireless_set_enabled(enable)
-    notify("Wifi {}".format("enabled" if enable is True else "disabled"))
+    notify(f"Wifi {'enabled' if enable is True else 'disabled'}")
 
 
 def toggle_wwan(enable):
@@ -582,7 +577,7 @@ def toggle_wwan(enable):
     except AttributeError:
         # Workaround for older versions of python-gobject
         CLIENT.wwan_set_enabled(enable)
-    notify("Wwan {}".format("enabled" if enable is True else "disabled"))
+    notify(f"Wwan {'enabled' if enable is True else 'disabled'}")
 
 
 def toggle_bluetooth(enable):
@@ -613,7 +608,7 @@ def toggle_bluetooth(enable):
                "Maybe you need to add your user to the 'rfkill' group?",
                urgency="critical")
     else:
-        notify("Bluetooth {}".format("enabled" if enable else "disabled"))
+        notify(f"Bluetooth {'enabled' if enable else 'disabled'}")
 
 
 def launch_connection_editor():
@@ -674,7 +669,7 @@ def delete_connection():
     if not sel.strip():
         sys.exit()
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
-    assert len(action) == 1, u"Selection was ambiguous: {}".format(str(sel))
+    assert len(action) == 1, f"Selection was ambiguous: {str(sel)}"
     action[0]()
     LOOP.run()
 
@@ -684,9 +679,9 @@ def delete_cb(dev, res, data):
 
     """
     if dev.delete_finish(res) is True:
-        notify("Deleted {}".format(dev.get_id()))
+        notify(f"Deleted {dev.get_id()}")
     else:
-        notify("Problem deleting {}".format(dev.get_id()), urgency="critical")
+        notify(f"Problem deleting {dev.get_id()}", urgency="critical")
     LOOP.quit()
 
 
@@ -767,10 +762,10 @@ def verify_conn(client, result, data):
                     data.verify(),
                     data.verify_secrets()]):
             raise GLib.Error
-        notify("Added {}".format(conn.get_id()))
+        notify(f"Added {conn.get_id()}")
     except GLib.Error:  # pylint: disable=catching-non-exception
         try:
-            notify("Connection to {} failed".format(conn.get_id()),
+            notify(f"Connection to {conn.get_id()} failed",
                    urgency="critical")
             conn.delete_async(None, None, None)
         except UnboundLocalError:
