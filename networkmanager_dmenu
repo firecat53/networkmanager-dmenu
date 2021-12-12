@@ -26,7 +26,7 @@ import subprocess
 
 import gi
 gi.require_version('NM', '1.0')
-from gi.repository import GLib, NM  # pylint: disable=wrong-import-position
+from gi.repository import GLib, NM  # noqa pylint: disable=wrong-import-position
 
 ENV = os.environ.copy()
 ENV['LC_ALL'] = 'C'
@@ -108,9 +108,9 @@ def choose_adapter(client):
     """
     devices = client.get_devices()
     devices = [i for i in devices if i.get_device_type() == NM.DeviceType.WIFI]
-    if not devices:  # pylint: disable=no-else-return
+    if not devices:
         return None
-    elif len(devices) == 1:
+    if len(devices) == 1:
         return devices[0]
     device_names = "\n".join([d.get_iface() for d in devices])
     sel = subprocess.run(dmenu_cmd(len(devices), "CHOOSE ADAPTER:"),
@@ -352,7 +352,7 @@ def process_vpngsm(con, activate):
     LOOP.run()
 
 
-def create_ap_actions(aps, active_ap, active_connection, adapter):  # pylint: disable=too-many-locals
+def create_ap_actions(aps, active_ap, active_connection, adapter):  # noqa pylint: disable=too-many-locals,line-too-long
     """For each AP in a list, create the string and its attached function
     (activate/deactivate)
 
@@ -471,6 +471,7 @@ def create_wwan_actions(client):
 
 
 def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
+    # pylint: disable=too-many-arguments
     """Combine all given actions into a list of actions.
 
     Args: args - eths: list of Actions
@@ -700,10 +701,10 @@ def set_new_connection(nm_ap, nm_pw, adapter):
 
 
 def create_wifi_profile(nm_ap, password, adapter):
-    # pylint: disable=C0301
+    # pylint: disable=line-too-long
     # From https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/gi/add_connection.py
     # and https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/dbus/add-wifi-psk-connection.py
-    # pylint: enable=C0301
+    # pylint: enable=line-too-long
     """Create the NM profile given the AP and passphrase"""
     ap_sec = ap_security(nm_ap)
     profile = NM.SimpleConnection.new()
@@ -763,7 +764,7 @@ def verify_conn(client, result, data):
                     data.verify_secrets()]):
             raise GLib.Error
         notify(f"Added {conn.get_id()}")
-    except GLib.Error:  # pylint: disable=catching-non-exception
+    except GLib.Error:
         try:
             notify(f"Connection to {conn.get_id()} failed",
                    urgency="critical")
@@ -828,7 +829,7 @@ def notify(message, details=None, urgency="low"):
         subprocess.run(["notify-send"] + args, check=False)
 
 
-def run():
+def run():  # pylint: disable=too-many-locals
     """Main script entrypoint"""
     active = CLIENT.get_active_connections()
     adapter = choose_adapter(CLIENT)
