@@ -19,9 +19,10 @@ import locale
 import os
 from os.path import expanduser
 import shlex
+from shutil import which
 import sys
 import uuid
-from subprocess import Popen, PIPE, run as sprun
+import subprocess
 
 import gi
 gi.require_version('NM', '1.0')
@@ -62,7 +63,7 @@ def cli_args():
     return args
 
 
-def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disable=too-many-branches
+def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
     """Parse config.ini for menu options
 
     Args: args - num_lines: number of lines to display
@@ -88,7 +89,9 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):  # pylint: disab
         obscure_color = CONF.get('dmenu_passphrase', 'obscure_color', fallback='#222222')
         try:
             # Check for dmenu password patch
-            dm_patch = b'P' in sprun(["dmenu", "-h"], check=False, capture_output=True).stderr
+            dm_patch = b'P' in subprocess.run(["dmenu", "-h"],
+                                              capture_output=True,
+                                              check=False).stderr
         except FileNotFoundError:
             dm_patch = False
         dmenu = ["-P"] if dm_patch else ["-nb", obscure_color, "-nf", obscure_color]
@@ -109,11 +112,13 @@ def choose_adapter(client):
         return None
     elif len(devices) == 1:
         return devices[0]
-    device_names = "\n".join([d.get_iface() for d in devices]).encode(ENC)
-    sel = Popen(dmenu_cmd(len(devices), "CHOOSE ADAPTER:"),
-                stdin=PIPE,
-                stdout=PIPE,
-                env=ENV).communicate(input=device_names)[0].decode(ENC)
+    device_names = "\n".join([d.get_iface() for d in devices])
+    sel = subprocess.run(dmenu_cmd(len(devices), "CHOOSE ADAPTER:"),
+                         capture_output=True,
+                         check=False,
+                         env=ENV,
+                         input=device_names,
+                         encoding=ENC).stdout
     if not sel.strip():
         sys.exit()
     devices = [i for i in devices if i.get_iface() == sel.strip()]
@@ -121,14 +126,9 @@ def choose_adapter(client):
     return devices[0]
 
 
-def is_modemmanager_installed():
-    """Check if ModemManager is installed"""
-    with open(os.devnull) as devnull:
-        try:
-            Popen(["ModemManager"], stdout=devnull, stderr=devnull).communicate()
-        except OSError:
-            return False
-        return True
+def is_installed(cmd):
+    """Check if a utility is installed"""
+    return which(cmd) is not None
 
 
 def bluetooth_get_enabled():
@@ -513,10 +513,13 @@ def get_selection(all_actions):
     active_lines = [index for index, action in enumerate(all_actions)
                     if action.is_active]
 
-    inp_bytes = "\n".join(inp).encode(ENC)
     command = dmenu_cmd(len(inp), active_lines=active_lines)
-    sel = Popen(command, stdin=PIPE, stdout=PIPE,
-                env=ENV).communicate(input=inp_bytes)[0].decode(ENC)
+    sel = subprocess.run(command,
+                         capture_output=True,
+                         check=False,
+                         input="\n".join(inp),
+                         encoding=ENC,
+                         env=ENV).stdout
 
     if not sel.rstrip():
         sys.exit()
@@ -619,16 +622,16 @@ def launch_connection_editor():
     """
     terminal = CONF.get("editor", "terminal", fallback="xterm")
     gui_if_available = CONF.getboolean("editor", "gui_if_available", fallback=True)
+    guis = ["gnome-continue-center", "nm-connection-editor"]
     if gui_if_available is True:
-        try:
-            Popen(["gnome-control-center", "network"]).communicate()
-        except OSError:
-            try:
-                Popen(["nm-connection-editor"]).communicate()
-            except OSError:
-                Popen([terminal, "-e", "nmtui"]).communicate()
-    else:
-        Popen([terminal, "-e", "nmtui"]).communicate()
+        for gui in guis:
+            if is_installed(gui):
+                subprocess.run(gui, check=False)
+                return
+    if is_installed("nmtui"):
+        subprocess.run([terminal, "-e", "nmtui"], check=False)
+        return
+    notify("No network connection editor installed", urgency="critical")
 
 
 def get_passphrase():
@@ -640,16 +643,20 @@ def get_passphrase():
     pinentry = CONF.get("dmenu", "pinentry", fallback=None)
     if pinentry:
         pin = ""
-        out = Popen(pinentry,
-                    stdout=PIPE,
-                    stdin=PIPE).communicate(input=b'setdesc Get network password\ngetpin\n')[0]
+        out = subprocess.run(pinentry,
+                             capture_output=True,
+                             check=False,
+                             encoding=ENC,
+                             input='setdesc Get network password\ngetpin\n').stdout
         if out:
-            res = out.decode(ENC).split("\n")[2]
+            res = out.split("\n")[2]
             if res.startswith("D "):
                 pin = res.split("D ")[1]
         return pin
-    return Popen(dmenu_cmd(0, "Passphrase"),
-                 stdin=PIPE, stdout=PIPE).communicate()[0].decode(ENC)
+    return subprocess.run(dmenu_cmd(0, "Passphrase"),
+                          capture_output=True,
+                          check=False,
+                          encoding=ENC).stdout
 
 
 def delete_connection():
@@ -657,11 +664,13 @@ def delete_connection():
 
     """
     conn_acts = [Action(i.get_id(), i.delete_async, args=[None, delete_cb, None]) for i in CONNS]
-    conn_names = "\n".join([str(i) for i in conn_acts]).encode(ENC)
-    sel = Popen(dmenu_cmd(len(conn_acts), "CHOOSE CONNECTION TO DELETE:"),
-                stdin=PIPE,
-                stdout=PIPE,
-                env=ENV).communicate(input=conn_names)[0].decode(ENC)
+    conn_names = "\n".join([str(i) for i in conn_acts])
+    sel = subprocess.run(dmenu_cmd(len(conn_acts), "CHOOSE CONNECTION TO DELETE:"),
+                         capture_output=True,
+                         check=False,
+                         input=conn_names,
+                         encoding=ENC,
+                         env=ENV).stdout
     if not sel.strip():
         sys.exit()
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
@@ -820,12 +829,8 @@ def notify(message, details=None, urgency="low"):
     args = ["-u", urgency, "-a", "networkmanager-dmenu", message]
     if details is not None:
         args.append(details)
-
-    try:
-        Popen(["notify-send"] + args,
-              stdout=PIPE, stderr=PIPE).communicate()
-    except FileNotFoundError:
-        pass
+    if is_installed("notify-send"):
+        subprocess.run(["notify-send"] + args, check=False)
 
 
 def run():
@@ -851,7 +856,7 @@ def run():
     eth_actions = create_eth_actions(eths, active)
     blue_actions = create_blue_actions(blues, active)
     other_actions = create_other_actions(CLIENT)
-    wwan_installed = is_modemmanager_installed()
+    wwan_installed = is_installed("ModemManager")
     if wwan_installed:
         gsms = [i for i in CONNS if i.is_type(NM.SETTING_GSM_SETTING_NAME)]
         gsm_actions = create_gsm_actions(gsms, active)
