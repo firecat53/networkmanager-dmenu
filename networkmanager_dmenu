@@ -606,7 +606,7 @@ def toggle_bluetooth(enable):
             rff.write(data)
     except PermissionError:
         notify("Lacking permission to write to /dev/rfkill.",
-               "Maybe you need to add your user to the 'rfkill' group?",
+               "Check README for configuration options.",
                urgency="critical")
     else:
         notify(f"Bluetooth {'enabled' if enable else 'disabled'}")

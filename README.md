@@ -61,10 +61,19 @@ Manage NetworkManager connections with dmenu, [Rofi][1] or [Bemenu][2] instead o
   accessible under a "Saved connections" sub-menu.
 - If desired, copy the networkmanager_dmenu.desktop to /usr/share/applications
   or ~/.local/share/applications.
-- If you want to run the script as $USER instead of ROOT, set [PolicyKit
-  permissions][5]. The script is usable for connecting to pre-existing
-  connections without setting these, but you won't be able to enable/disable
-  networking or add new connections.
+- If you want to run the script as $USER instead of ROOT
+    1. Set [PolicyKit permissions][5]. The script is usable for connecting to
+       pre-existing connections without setting these, but you won't be able to
+       enable/disable networking or add new connections.
+    2. For bluetooth control, the user needs to have access to `/dev/rfkill`. On
+       some distros (e.g. Archlinux), `/dev/rfkill` belongs to a group such as
+       `rfkill`. In this case, ensure $USER belongs to that group. For other
+       distros (e.g. Fedora), you can use udev to ensure `/dev/rfkill` belongs
+       to a group. For example, create `/etc/udev/rules.d/10-rfkill.rules`:
+       
+                KERNEL=="rfkill", GROUP="wheel", MODE="0664"
+    
+       and then ensure $USER belongs to the `wheel` group.
 
 ### Config.ini values
 
