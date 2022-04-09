@@ -1,12 +1,7 @@
 # Networkmanager-dmenu
 
-Manage NetworkManager connections with dmenu, [Rofi][1] or [Bemenu][2] instead of nm-applet
-
-**WARNING** _Two breaking changes 2021-12-08_
-
-1. _ALL_ menu configuration moved to `dmenu_command`, including `-i`. Note
-   options changed in config.ini.example
-2. Minimum Python version now 3.7
+Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2] or
+[Wofi][7] instead of nm-applet
 
 ## Features
 
@@ -32,7 +27,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1] or [Bemenu][2] instead o
 
 1. Python 3.7+
 2. NetworkManager
-3. Dmenu, Rofi or bemenu
+3. Dmenu (X), Rofi (X or XWayland), Wofi (Wayland) or Bemenu (X or Wayland)
 4. Python gobject (PyGObject, python-gobject, etc.)
 5. (Debian/Ubuntu based distros) libnm-util-dev and gir1.2-nm-1.0 (you have to
    explicitly install the latter on Debian Sid)
@@ -53,8 +48,8 @@ Manage NetworkManager connections with dmenu, [Rofi][1] or [Bemenu][2] instead o
 - If using dmenu for passphrase entry (pinentry not set), dmenu options in the
   `[dmenu_passphrase]` section of config.ini will set the normal foreground and
   background colors to be the same to obscure the passphrase. The [Suckless
-  password patch][6] `-P` option is supported if that patch is installed. Rofi and
-  bemenu will use their respective flags for passphrase entry.
+  password patch][6] `-P` option is supported if that patch is installed. Rofi,
+  Wofi and Bemenu will use their respective flags for passphrase entry.
 - Set default terminal (xterm, urxvtc, etc.) command in config.ini if desired.
 - Saved connections can be listed if desired. Set `list_saved = True` under
   `[dmenu]` in config.ini. If set to `False`, saved connections are still
@@ -106,3 +101,4 @@ Manage NetworkManager connections with dmenu, [Rofi][1] or [Bemenu][2] instead o
 [4]: https://github.com/Woomy4680-exe/Woomy-overlay "Woomy Overlay" 
 [5]: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions "PolicyKit permissions"
 [6]: https://tools.suckless.org/dmenu/patches/password/ "Suckless password patch" 
+[7]: https://hg.sr.ht/~scoopta/wofi "Wofi"
