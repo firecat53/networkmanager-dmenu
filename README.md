@@ -16,6 +16,8 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2] or
 - Rescan wifi networks
 - Uses notify-send for notifications if available
 
+![Screencast](nmdm.gif)
+
 ## Installation
 
 - Copy script somewhere into $PATH OR
