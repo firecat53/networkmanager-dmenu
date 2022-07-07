@@ -666,6 +666,7 @@ def get_passphrase():
                 pin = res.split("D ")[1]
         return pin
     return subprocess.run(dmenu_cmd(0, "Passphrase"),
+                          stdin=subprocess.DEVNULL,
                           capture_output=True,
                           check=False,
                           encoding=ENC).stdout
