@@ -888,8 +888,9 @@ def run():  # pylint: disable=too-many-locals
     actions = combine_actions(eth_actions, ap_actions, vpn_actions, wg_actions,
                               gsm_actions, blue_actions, wwan_actions,
                               other_actions, saved_actions)
-    sel = get_selection(actions)
-    sel()
+    while True:
+        sel = get_selection(actions)
+        sel()
 
 
 if __name__ == '__main__':
