@@ -486,7 +486,7 @@ def create_wwan_actions(client):
     return [Action(f"{wwan_action} WWAN", toggle_wwan, not wwan_enabled)]
 
 
-def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
+def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved, close):
     # pylint: disable=too-many-arguments
     """Combine all given actions into a list of actions.
 
@@ -510,6 +510,7 @@ def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
     all_actions += wwan + empty_action if wwan else []
     all_actions += others + empty_action if others else []
     all_actions += saved + empty_action if saved else []
+    all_actions += close + empty_action if close else []
     return all_actions
 
 
@@ -885,9 +886,11 @@ def run():  # pylint: disable=too-many-locals
     else:
         saved_actions = [Action("Saved connections", prompt_saved, [saved_cons])]
 
+    close_actions = [Action("Exit networkmanager-dmenu", exit, [0])]
+
     actions = combine_actions(eth_actions, ap_actions, vpn_actions, wg_actions,
                               gsm_actions, blue_actions, wwan_actions,
-                              other_actions, saved_actions)
+                              other_actions, saved_actions, close_actions)
     while True:
         sel = get_selection(actions)
         sel()
