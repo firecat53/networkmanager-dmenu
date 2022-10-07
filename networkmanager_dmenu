@@ -21,20 +21,19 @@ from os.path import expanduser
 import shlex
 from shutil import which
 import sys
+from time import sleep
 import uuid
 import subprocess
 
+# pylint: disable=import-error
 import gi
 gi.require_version('NM', '1.0')
 from gi.repository import GLib, NM  # noqa pylint: disable=wrong-import-position
+# pylint: enable=import-error
 
 ENV = os.environ.copy()
 ENV['LC_ALL'] = 'C'
 ENC = locale.getpreferredencoding()
-
-CLIENT = NM.Client.new(None)
-LOOP = GLib.MainLoop()
-CONNS = CLIENT.get_connections()
 
 CONF = configparser.ConfigParser()
 CONF.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
@@ -190,11 +189,15 @@ def rescan_wifi():
     """
     Rescan Wifi Access Points
     """
+    delay = CONF.getint('nmdm', 'rescan_delay', fallback=5)
     for dev in CLIENT.get_devices():
         if gi.repository.NM.DeviceWifi == type(dev):
             try:
                 dev.request_scan_async(None, rescan_cb, None)
                 LOOP.run()
+                sleep(delay)
+                notify("Wifi scan complete")
+                main()
             except gi.repository.GLib.Error as err:
                 # Too frequent rescan error
                 notify("Wifi rescan failed", urgency="critical")
@@ -207,7 +210,7 @@ def rescan_cb(dev, res, data):
 
     """
     if dev.request_scan_finish(res) is True:
-        notify("Wifi scan complete")
+        notify("Wifi scan running...")
     else:
         notify("Wifi scan failed", urgency="critical")
     LOOP.quit()
@@ -719,8 +722,8 @@ def set_new_connection(nm_ap, nm_pw, adapter):
 
 def create_wifi_profile(nm_ap, password, adapter):
     # pylint: disable=line-too-long
-    # From https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/gi/add_connection.py
-    # and https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/dbus/add-wifi-psk-connection.py
+    # noqa From https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/gi/add_connection.py
+    # noqa and https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/examples/python/dbus/add-wifi-psk-connection.py
     # pylint: enable=line-too-long
     """Create the NM profile given the AP and passphrase"""
     ap_sec = ap_security(nm_ap)
@@ -839,7 +842,9 @@ def notify(message, details=None, urgency="low"):
     """Use notify-send if available for notifications
 
     """
-    args = ["-u", urgency, "-a", "networkmanager-dmenu", message]
+    delay = CONF.getint('nmdm', 'rescan_delay', fallback=5)
+    args = ["-u", urgency, "-a", "networkmanager-dmenu",
+            "-t", str(delay * 1000), message]
     if details is not None:
         args.append(details)
     if is_installed("notify-send"):
@@ -892,7 +897,19 @@ def run():  # pylint: disable=too-many-locals
     sel()
 
 
-if __name__ == '__main__':
+def main():
+    """Main. Enables script to be re-run after a wifi rescan
+
+    """
+    global CLIENT, CONNS, LOOP  # noqa pylint: disable=global-variable-undefined
+    CLIENT = NM.Client.new(None)
+    LOOP = GLib.MainLoop()
+    CONNS = CLIENT.get_connections()
+
     run()
+
+
+if __name__ == '__main__':
+    main()
 
 # vim: set et ts=4 sw=4 :

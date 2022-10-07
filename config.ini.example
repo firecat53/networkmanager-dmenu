@@ -21,3 +21,6 @@
 [editor]
 # terminal = <name of terminal program>
 # gui_if_available = <True or False> (Default: True)
+
+[nmdm]
+# rescan_delay = <seconds>  # (seconds to wait after a wifi rescan before redisplaying the results)
