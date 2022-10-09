@@ -240,14 +240,19 @@ def ap_security(nm_ap):
     sec_str = ""
     if ((flags & getattr(NM, '80211ApFlags').PRIVACY) and
             (wpa_flags == 0) and (rsn_flags == 0)):
-        sec_str += " WEP"
-    if wpa_flags != 0:
-        sec_str += " WPA1"
-    if rsn_flags != 0:
+        sec_str = " WEP"
+    if wpa_flags:
+        sec_str = " WPA1"
+    if rsn_flags & getattr(NM, '80211ApSecurityFlags').KEY_MGMT_PSK:
         sec_str += " WPA2"
+    if rsn_flags & getattr(NM, '80211ApSecurityFlags').KEY_MGMT_SAE:
+        sec_str += " WPA3"
     if ((wpa_flags & getattr(NM, '80211ApSecurityFlags').KEY_MGMT_802_1X) or
             (rsn_flags & getattr(NM, '80211ApSecurityFlags').KEY_MGMT_802_1X)):
         sec_str += " 802.1X"
+    if ((wpa_flags & getattr(NM, '80211ApSecurityFlags').KEY_MGMT_OWE) or
+            (rsn_flags & getattr(NM, '80211ApSecurityFlags').KEY_MGMT_OWE)):
+        sec_str += " OWE"
 
     # If there is no security use "--"
     if sec_str == "":
@@ -752,8 +757,12 @@ def create_wifi_profile(nm_ap, password, adapter):
     if ap_sec != "--":
         s_wifi_sec = NM.SettingWirelessSecurity.new()
         if "WPA" in ap_sec:
-            s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_KEY_MGMT,
-                                    "wpa-psk")
+            if "WPA3" in ap_sec:
+                s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_KEY_MGMT,
+                                        "sae")
+            else:
+                s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_KEY_MGMT,
+                                        "wpa-psk")
             s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_AUTH_ALG,
                                     "open")
             s_wifi_sec.set_property(NM.SETTING_WIRELESS_SECURITY_PSK, password)
