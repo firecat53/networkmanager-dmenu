@@ -137,7 +137,8 @@ def choose_adapter(client):
     if not sel.strip():
         sys.exit()
     devices = [i for i in devices if i.get_iface() == sel.strip()]
-    assert len(devices) == 1
+    if len(devices) != 1:
+        raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
     return devices[0]
 
 
@@ -553,7 +554,8 @@ def get_selection(all_actions):
                        and i.is_active))]
     else:
         action = [i for i in all_actions if str(i).strip() == sel.strip()]
-    assert len(action) == 1, f"Selection was ambiguous: '{str(sel.strip())}'"
+    if len(action) != 1:
+        raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
     return action[0]
 
 
@@ -695,7 +697,8 @@ def delete_connection():
     if not sel.strip():
         sys.exit()
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
-    assert len(action) == 1, f"Selection was ambiguous: {str(sel)}"
+    if len(action) != 1:
+        raise ValueError(f"Selection was ambiguous: {str(sel)}")
     action[0]()
     LOOP.run()
 
