@@ -862,6 +862,10 @@ def notify(message, details=None, urgency="low"):
 
 def run():  # pylint: disable=too-many-locals
     """Main script entrypoint"""
+    stat = subprocess.check_output(
+        "ps aux | grep /usr/bin/NetworkManager | wc -l", shell=True)
+    if int(stat) != 3:
+        print("WARNING: NetworkManager don't seems to be running")
     active = CLIENT.get_active_connections()
     adapter = choose_adapter(CLIENT)
     if adapter:
