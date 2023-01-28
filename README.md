@@ -1,7 +1,7 @@
 # Networkmanager-dmenu
 
-Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2] or
-[Wofi][7] instead of nm-applet
+Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
+[Wofi][7] or [fuzzel][8] instead of nm-applet
 
 ## Features
 
@@ -105,3 +105,4 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2] or
 [5]: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions "PolicyKit permissions"
 [6]: https://tools.suckless.org/dmenu/patches/password/ "Suckless password patch" 
 [7]: https://hg.sr.ht/~scoopta/wofi "Wofi"
+[8]: https://codeberg.org/dnkl/fuzzel "Fuzzel"

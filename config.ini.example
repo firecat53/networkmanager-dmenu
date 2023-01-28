@@ -4,6 +4,7 @@
 # # `dmenu_command = rofi -dmenu -i -theme nmdm`
 # # `dmenu_command = rofi -dmenu -width 30 -i`
 # # `dmenu_command = dmenu -i -l 25 -b -nb #909090 -nf #303030`
+# # `dmenu_command = fuzzel --dmenu`
 # rofi_highlight = <True or False> # (Default: False) use rofi highlighting instead of '=='
 # compact = <True or False> # (Default: False). Remove extra spacing from display
 # pinentry = <Pinentry command>  # (Default: None) e.g. `pinentry-gtk`

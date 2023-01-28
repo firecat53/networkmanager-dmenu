@@ -97,7 +97,8 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
     commands = {"dmenu": ["-p", str(prompt)],
                 "rofi": ["-dmenu", "-p", str(prompt), "-l", str(num_lines)],
                 "bemenu": ["-p", str(prompt)],
-                "wofi": ["-p", str(prompt)]}
+                "wofi": ["-p", str(prompt)],
+                "fuzzel": ["-p", str(prompt), "-l", str(num_lines), "--log-level", "none"]}
     command = shlex.split(CONF.get('dmenu', 'dmenu_command', fallback="dmenu"))
     command.extend(cli_args())
     command.extend(commands.get(command[0], []))
@@ -112,7 +113,8 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
         pass_prompts = {"dmenu": dmenu_pass(command[0], obscure_color),
                         "rofi": ['-password'],
                         "bemenu": ['-x'],
-                        "wofi": ['-P']}
+                        "wofi": ['-P'],
+                        "fuzzel": ['--password']}
         command.extend(pass_prompts.get(command[0], []))
     return command
 
