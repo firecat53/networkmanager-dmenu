@@ -32,7 +32,6 @@ from gi.repository import GLib, NM  # noqa pylint: disable=wrong-import-position
 # pylint: enable=import-error
 
 ENV = os.environ.copy()
-ENV['LC_ALL'] = 'C'
 ENC = locale.getpreferredencoding()
 
 CONF = configparser.ConfigParser()
