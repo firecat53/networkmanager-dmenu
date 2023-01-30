@@ -182,8 +182,11 @@ def create_other_actions(client):
                 Action("Delete a Connection", delete_connection)]
     if wifi_enabled:
         actions.append(Action("Rescan Wifi Networks", rescan_wifi))
+    actions.append(Action("Restart NetworkManager", restart_nm))
     return actions
 
+def restart_nm():
+    subprocess.run(["systemctl","restart","NetworkManager"])
 
 def rescan_wifi():
     """
