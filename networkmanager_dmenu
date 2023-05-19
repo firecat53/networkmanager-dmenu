@@ -95,7 +95,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
     """
     # Create command string
     commands = {"dmenu": ["-p", str(prompt)],
-                "rofi": ["-dmenu", "-p", str(prompt), "-l", str(num_lines)],
+                "rofi": ["-dmenu", "-p", str(prompt)],
                 "bemenu": ["-p", str(prompt)],
                 "wofi": ["-p", str(prompt)]}
     command = shlex.split(CONF.get('dmenu', 'dmenu_command', fallback="dmenu"))
