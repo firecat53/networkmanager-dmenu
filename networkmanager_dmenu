@@ -17,7 +17,7 @@ import struct
 import configparser
 import locale
 import os
-from os.path import expanduser
+from os.path import basename, expanduser
 import shlex
 from shutil import which
 import sys
@@ -94,27 +94,28 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
     """
     # Create command string
     commands = {"dmenu": ["-p", str(prompt)],
-                "rofi": ["-dmenu", "-p", str(prompt), "-l", str(num_lines)],
+                "rofi": ["-dmenu", "-p", str(prompt)],
                 "bemenu": ["-p", str(prompt)],
                 "wofi": ["-p", str(prompt)],
                 "fuzzel": ["-p", str(prompt), "-l", str(num_lines), "--log-level", "none"]}
     command = shlex.split(CONF.get('dmenu', 'dmenu_command', fallback="dmenu"))
+    cmd_base = basename(command[0])
     command.extend(cli_args())
-    command.extend(commands.get(command[0], []))
+    command.extend(commands.get(cmd_base, []))
     # Rofi Highlighting
     rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
-    if rofi_highlight is True and command[0] == "rofi" and active_lines:
+    if rofi_highlight is True and cmd_base == "rofi" and active_lines:
         command.extend(["-a", ",".join([str(num) for num in active_lines])])
     # Passphrase prompts
     obscure = CONF.getboolean('dmenu_passphrase', 'obscure', fallback=False)
     if prompt == "Passphrase" and obscure is True:
         obscure_color = CONF.get('dmenu_passphrase', 'obscure_color', fallback='#222222')
-        pass_prompts = {"dmenu": dmenu_pass(command[0], obscure_color),
+        pass_prompts = {"dmenu": dmenu_pass(cmd_base, obscure_color),
                         "rofi": ['-password'],
                         "bemenu": ['-x'],
                         "wofi": ['-P'],
                         "fuzzel": ['--password']}
-        command.extend(pass_prompts.get(command[0], []))
+        command.extend(pass_prompts.get(cmd_base, []))
     return command
 
 
@@ -138,7 +139,8 @@ def choose_adapter(client):
     if not sel.strip():
         sys.exit()
     devices = [i for i in devices if i.get_iface() == sel.strip()]
-    assert len(devices) == 1
+    if len(devices) != 1:
+        raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
     return devices[0]
 
 
@@ -554,7 +556,8 @@ def get_selection(all_actions):
                        and i.is_active))]
     else:
         action = [i for i in all_actions if str(i).strip() == sel.strip()]
-    assert len(action) == 1, f"Selection was ambiguous: '{str(sel.strip())}'"
+    if len(action) != 1:
+        raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
     return action[0]
 
 
@@ -696,7 +699,8 @@ def delete_connection():
     if not sel.strip():
         sys.exit()
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
-    assert len(action) == 1, f"Selection was ambiguous: {str(sel)}"
+    if len(action) != 1:
+        raise ValueError(f"Selection was ambiguous: {str(sel)}")
     action[0]()
     LOOP.run()
 
@@ -863,6 +867,11 @@ def notify(message, details=None, urgency="low"):
 
 def run():  # pylint: disable=too-many-locals
     """Main script entrypoint"""
+    try:
+        subprocess.check_output(["pidof", "NetworkManager"])
+    except subprocess.CalledProcessError:
+        notify("WARNING: NetworkManager don't seems to be running")
+        print("WARNING: NetworkManager don't seems to be running")
     active = CLIENT.get_active_connections()
     adapter = choose_adapter(CLIENT)
     if adapter:
