@@ -378,6 +378,20 @@ def process_vpngsm(con, activate):
         CLIENT.deactivate_connection_async(con, None, deactivate_cb, con)
     LOOP.run()
 
+def strength_bars(signal_strength):
+    bars = NM.utils_wifi_strength_bars(signal_strength)
+    wifi_chars = CONF.get("dmenu", "wifi_chars", fallback=False)
+    if wifi_chars:
+        bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == '*'])
+    return bars
+
+
+def strength_icon(signal_strength):
+    wifi_icons = CONF.get("dmenu", "wifi_icons", fallback=False)
+    if wifi_icons:
+        return wifi_icons[round(signal_strength / 100 * (len(wifi_icons) - 1))]
+    return ""
+
 
 def create_ap_actions(aps, active_ap, active_connection, adapter):  # noqa pylint: disable=too-many-locals,line-too-long
     """For each AP in a list, create the string and its attached function
@@ -393,17 +407,18 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # noqa pylin
 
     ap_actions = []
 
+    if CONF.getboolean("dmenu", "compact", fallback=False):
+        format = CONF.get("dmenu", "format", fallback="{name}  {sec}  {bars}")
+    else:
+        format = CONF.get("dmenu", "format", "{name:<{max_len_name}s}  {sec:<{max_len_sec}s} {bars:>4}")
+
     for nm_ap, name, sec in zip(aps, names, secs):
-        bars = NM.utils_wifi_strength_bars(nm_ap.get_strength())
-        wifi_chars = CONF.get("dmenu", "wifi_chars", fallback=False)
-        if wifi_chars:
-            bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == '*'])
         is_active = nm_ap.get_bssid() == active_ap_bssid
-        compact = CONF.getboolean("dmenu", "compact", fallback=False)
-        if compact:
-            action_name = f"{name}  {sec}  {bars}"
-        else:
-            action_name = f"{name:<{max_len_name}s}  {sec:<{max_len_sec}s} {bars:>4}"
+        signal_strength = nm_ap.get_strength()
+        bars = strength_bars(signal_strength)
+        icon = strength_icon(signal_strength)
+        action_name = format.format(name=name, sec=sec, bars=bars, icon=icon,
+                                    max_len_name=max_len_name, max_len_sec=max_len_sec)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
                                      [active_connection, True, adapter],
@@ -666,12 +681,14 @@ def get_passphrase():
     """
     pinentry = CONF.get("dmenu", "pinentry", fallback=None)
     if pinentry:
+        description = CONF.get("pinentry", "description", fallback="Get network password")
+        prompt = CONF.get("pinentry", "prompt", fallback="Password: ")
         pin = ""
         out = subprocess.run(pinentry,
                              capture_output=True,
                              check=False,
                              encoding=ENC,
-                             input='setdesc Get network password\ngetpin\n').stdout
+                             input=f"setdesc {description}\nsetprompt {prompt}\ngetpin\n").stdout
         if out:
             res = out.split("\n")[2]
             if res.startswith("D "):

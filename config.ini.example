@@ -10,6 +10,17 @@
 # pinentry = <Pinentry command>  # (Default: None) e.g. `pinentry-gtk`
 # wifi_chars = <string of 4 unicode characters representing 1-4 bars strength>
 # wifi_chars = ▂▄▆█
+# wifi_icons = <characters representing signal strength as an icon>
+# wifi_icons = 󰤯󰤟󰤢󰤥󰤨
+# format = <Python style format string for the access point entries>
+# format = {name}  {sec}  {bars}
+# # Available variables are:
+# #  * {name} - Access point name
+# #  * {sec} - Security type
+# #  * {bars} - Bar-based display of signal strength (see wifi_chars)
+# #  * {icon} - Icon-based display of signal strength (see wifi_icons)
+# #  * {max_len_name} and {max_len_sec} are the maximum lengths of {name} / {sec}
+# #    respectively and may be useful for formatting.
 # list_saved = <True or False> # (Default: False) list saved connections
 
 [dmenu_passphrase]
@@ -18,6 +29,10 @@
 # # https://tools.suckless.org/dmenu/patches/password/
 # obscure = True
 # obscure_color = #222222
+
+[pinentry]
+# description = <Pinentry description> (Default: Get network password)
+# prompt = <Pinentry prompt> (Default: Password:)
 
 [editor]
 # terminal = <name of terminal program>
