@@ -410,7 +410,7 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # noqa pylin
     if CONF.getboolean("dmenu", "compact", fallback=False):
         format = CONF.get("dmenu", "format", fallback="{name}  {sec}  {bars}")
     else:
-        format = CONF.get("dmenu", "format", "{name:<{max_len_name}s}  {sec:<{max_len_sec}s} {bars:>4}")
+        format = CONF.get("dmenu", "format", fallback="{name:<{max_len_name}s}  {sec:<{max_len_sec}s} {bars:>4}")
 
     for nm_ap, name, sec in zip(aps, names, secs):
         is_active = nm_ap.get_bssid() == active_ap_bssid
