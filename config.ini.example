@@ -17,6 +17,7 @@
 # # Available variables are:
 # #  * {name} - Access point name
 # #  * {sec} - Security type
+# #  * {signal} - Signal strength on a scale of 0-100
 # #  * {bars} - Bar-based display of signal strength (see wifi_chars)
 # #  * {icon} - Icon-based display of signal strength (see wifi_icons)
 # #  * {max_len_name} and {max_len_sec} are the maximum lengths of {name} / {sec}

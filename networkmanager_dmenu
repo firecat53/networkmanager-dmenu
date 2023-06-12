@@ -417,7 +417,7 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # noqa pylin
         signal_strength = nm_ap.get_strength()
         bars = strength_bars(signal_strength)
         icon = strength_icon(signal_strength)
-        action_name = format.format(name=name, sec=sec, bars=bars, icon=icon,
+        action_name = format.format(name=name, sec=sec, signal=signal_strength, bars=bars, icon=icon,
                                     max_len_name=max_len_name, max_len_sec=max_len_sec)
         if is_active:
             ap_actions.append(Action(action_name, process_ap,
