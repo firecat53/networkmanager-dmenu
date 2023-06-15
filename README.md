@@ -24,6 +24,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 
   - Archlinux: [AUR package][3] OR
   - Gentoo: [Woomy Overlay][4]
+  - Nix: [Nix Packages][9]
 
 ## Requirements
 
@@ -106,3 +107,4 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 [6]: https://tools.suckless.org/dmenu/patches/password/ "Suckless password patch" 
 [7]: https://hg.sr.ht/~scoopta/wofi "Wofi"
 [8]: https://codeberg.org/dnkl/fuzzel "Fuzzel"
+[9]: https://search.nixos.org/packages? "Nix Packages"
