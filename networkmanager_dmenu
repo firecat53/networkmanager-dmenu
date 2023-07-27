@@ -37,6 +37,8 @@ ENC = locale.getpreferredencoding()
 CONF = configparser.ConfigParser()
 CONF.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
 
+CMD_BASE = ""
+
 
 def cli_args():
     """ Don't override dmenu_cmd function arguments with CLI args. Removes -l
@@ -102,10 +104,16 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
     cmd_base = basename(command[0])
     command.extend(cli_args())
     command.extend(commands.get(cmd_base, []))
-    # Rofi Highlighting
-    rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
-    if rofi_highlight is True and cmd_base == "rofi" and active_lines:
-        command.extend(["-a", ",".join([str(num) for num in active_lines])])
+    # Highlighting
+    highlight = CONF.getboolean('dmenu', 'highlight', fallback=False)
+    if highlight is True:
+        # Rofi
+        if cmd_base == "rofi" and active_lines:
+            command.extend(["-a", ",".join([str(num) for num in active_lines])])
+        # Wofi
+        if cmd_base == "wofi" and active_lines:
+            # add '-q' to prevent tag name and properties of pango markup from searchable
+            command.extend(["-m", "-q"])
     # Passphrase prompts
     obscure = CONF.getboolean('dmenu_passphrase', 'obscure', fallback=False)
     if prompt == "Passphrase" and obscure is True:
@@ -550,16 +558,37 @@ def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
     return all_actions
 
 
+def get_wofi_highlight_markup(action):
+    highlight_fg = CONF.get('dmenu', 'highlight_fg', fallback=None)
+    highlight_bg = CONF.get('dmenu', 'highlight_bg', fallback=None)
+    highlight_bold = CONF.getboolean('dmenu', 'highlight_bold', fallback=True)
+
+    style = ""
+    if highlight_fg:
+        style += f'foreground="{highlight_fg}" '
+    if highlight_bg:
+        style += f'background="{highlight_bg}" '
+    if highlight_bold:
+        style += f'weight="bold" '
+
+    return f"<span {style}>" + str(action) + "</span>"
+
+
 def get_selection(all_actions):
     """Spawn dmenu for selection and execute the associated action."""
-    active_chars = CONF.get('dmenu', 'active_chars', fallback='==')
-    rofi_highlight = CONF.getboolean('dmenu', 'rofi_highlight', fallback=False)
+    command = shlex.split(CONF.get("dmenu", "dmenu_command", fallback="dmenu"))
+    cmd_base = basename(command[0])
+    active_chars = CONF.get("dmenu", "active_chars", fallback="==")
+    highlight = CONF.getboolean("dmenu", "highlight", fallback=False)
     inp = []
 
-    if rofi_highlight is True:
+    if highlight is True and cmd_base == "rofi":
         inp = [str(action) for action in all_actions]
+    elif highlight is True and cmd_base == "wofi":
+        inp = [get_wofi_highlight_markup(action) if action.is_active else str(action)
+               for action in all_actions]
     else:
-        inp = [(active_chars if action.is_active else ' ' * len(active_chars)) + ' ' + str(action)
+        inp = [(active_chars if action.is_active else " " * len(active_chars)) + " " + str(action)
                for action in all_actions]
     active_lines = [index for index, action in enumerate(all_actions)
                     if action.is_active]
@@ -575,14 +604,18 @@ def get_selection(all_actions):
     if not sel.rstrip():
         sys.exit()
 
-    if rofi_highlight is False:
+    if highlight is True and cmd_base == "rofi":
+        action = [i for i in all_actions if str(i).strip() == sel.strip()]
+    elif highlight is True and cmd_base == "wofi":
+        action = [i for i in all_actions
+                  if str(i).strip() == sel.strip() or
+                     get_wofi_highlight_markup(i) == sel.strip()]
+    else:
         action = [i for i in all_actions
                   if ((str(i).strip() == str(sel.strip())
                        and not i.is_active) or
-                      (active_chars + ' ' + str(i) == str(sel.rstrip('\n'))
+                      (active_chars + " " + str(i) == str(sel.rstrip('\n'))
                        and i.is_active))]
-    else:
-        action = [i for i in all_actions if str(i).strip() == sel.strip()]
     if len(action) != 1:
         raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
     return action[0]
