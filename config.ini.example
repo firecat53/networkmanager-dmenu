@@ -6,7 +6,10 @@
 # # `dmenu_command = dmenu -i -l 25 -b -nb #909090 -nf #303030`
 # # `dmenu_command = fuzzel --dmenu`
 # active_chars = ==
-# rofi_highlight = <True or False> # (Default: False) use rofi highlighting instead of active_chars
+# highlight = <True or False> # (Default: False) use highlighting instead of active_chars (only applicable to Rofi / Wofi)
+# highlight_fg = <Color> # (Default: None) foreground color of active connection (only applicable to Wofi)
+# highlight_bg = <Color> # (Default: None) background color of active connection (only applicable to Wofi)
+# highlight_bold = <True or False> # (Default: True) make active connection bold (only applicable to Wofi)
 # compact = <True or False> # (Default: False). Remove extra spacing from display
 # pinentry = <Pinentry command>  # (Default: None) e.g. `pinentry-gtk`
 # wifi_chars = <string of 4 unicode characters representing 1-4 bars strength>
