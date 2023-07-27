@@ -85,6 +85,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 |                      | `dmenu_command`    | `dmenu`                | Command can include arguments                    |
 |                      | `list_saved`       | `False`                |                                                  |
 |                      | `pinentry`         | None                   |                                                  |
+|                      | `active_chars`     | ==                   | Prefix of active connection                      |
 |                      | `rofi_highlight`   | `False`                |                                                  |
 |                      | `wifi_chars`       | None                   | String of 4 unicode characters                   |
 |                      | `wifi_icons`       | None                   | String of icon characters                        |
