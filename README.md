@@ -32,8 +32,8 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 2. NetworkManager
 3. Dmenu (X), Rofi (X or XWayland), Wofi (Wayland) or Bemenu (X or Wayland)
 4. Python gobject (PyGObject, python-gobject, etc.)
-5. (Debian/Ubuntu based distros) libnm-util-dev and gir1.2-nm-1.0 (you have to
-   explicitly install the latter on Debian Sid)
+5. (Debian/Ubuntu based distros) libnm0 (libnm-util-dev on older distributions)
+   and gir1.2-nm-1.0 (you have to explicitly install the latter on Debian Sid)
 6. (optional) The network-manager-applet package (in order to launch the GUI
    connection editor, if desired. The nm-applet does _not_ need to be started.)
 7. (optional) Pinentry. Make sure to set which flavor of pinentry command to use
