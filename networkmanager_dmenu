@@ -690,9 +690,9 @@ def get_passphrase():
                              encoding=ENC,
                              input=f"setdesc {description}\nsetprompt {prompt}\ngetpin\n").stdout
         if out:
-            res = out.split("\n")[2]
-            if res.startswith("D "):
-                pin = res.split("D ")[1]
+            res = [i for i in out.split("\n") if i.startswith("D ")]
+            if res and res[0].startswith("D "):
+                pin = res[0].split("D ")[1]
         return pin
     return subprocess.run(dmenu_cmd(0, "Passphrase"),
                           stdin=subprocess.DEVNULL,
