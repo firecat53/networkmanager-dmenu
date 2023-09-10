@@ -150,10 +150,21 @@ def is_installed(cmd):
 
 
 def bluetooth_get_enabled():
-    """Check if bluetooth is enabled via rfkill.
+    """Check if bluetooth is enabled. Try bluetoothctl first, then rfkill.
 
     Returns None if no bluetooth device was found.
     """
+    if is_installed('bluetoothctl'):
+        # Times out in 2 seconds, otherwise bluetoothctl will hang if bluetooth
+        # service isn't running.
+        try:
+            res = subprocess.run(['bluetoothctl', 'show'],
+                                 timeout=2,
+                                 capture_output=True,
+                                 text=True)
+            return "Powered: yes" in res.stdout
+        except subprocess.TimeoutExpired:
+            pass
     # See https://www.kernel.org/doc/Documentation/ABI/stable/sysfs-class-rfkill
     for path in pathlib.Path('/sys/class/rfkill/').glob('rfkill*'):
         if (path / 'type').read_text().strip() == 'bluetooth':
@@ -627,6 +638,9 @@ def toggle_wwan(enable):
 def toggle_bluetooth(enable):
     """Enable/disable Bluetooth
 
+    Try bluetoothctl first, then drop to rfkill if it's not installed or
+    bluetooth service isn't running.
+
     Args: enable - boolean
 
     References:
@@ -635,6 +649,26 @@ def toggle_bluetooth(enable):
     https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/uapi/linux/rfkill.h?h=v5.8.9
 
     """
+    if is_installed('bluetoothctl'):
+        # Times out in 2 seconds, otherwise bluetoothctl will hang if bluetooth
+        # service isn't running.
+        try:
+            res = subprocess.run(['bluetoothctl', 'power', 'on' if enable is True else 'off'],
+                                 timeout=2,
+                                 capture_output=True)
+        except subprocess.TimeoutExpired:
+            pass
+        try:
+            res = subprocess.run(['bluetoothctl', 'show'],
+                                 timeout=2,
+                                 capture_output=True,
+                                 text=True)
+            if "Powered: yes" in res.stdout:
+                notify("Bluetooth enabled")
+                return
+        except subprocess.TimeoutExpired:
+            pass
+    # Now try using rfkill
     type_bluetooth = 2
     op_change_all = 3
     idx = 0

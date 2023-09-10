@@ -40,6 +40,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
    in the config file.
 8. (optional) ModemManager for WWAN support.
 9. (optional) notify-send for notifications (connected, disconnected, etc.)
+10. (optional) bluez package for bluetooth control
 
 ## Configuration 
 
@@ -63,13 +64,16 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
     1. Set [PolicyKit permissions][5]. The script is usable for connecting to
        pre-existing connections without setting these, but you won't be able to
        enable/disable networking or add new connections.
-    2. For bluetooth control, the user needs to have access to `/dev/rfkill`. On
-       some distros (e.g. Archlinux), `/dev/rfkill` belongs to a group such as
-       `rfkill`. In this case, ensure $USER belongs to that group. For other
-       distros (e.g. Fedora), you can use udev to ensure `/dev/rfkill` belongs
-       to a group. For example, create `/etc/udev/rules.d/10-rfkill.rules`:
-       
-                KERNEL=="rfkill", GROUP="wheel", MODE="0664"
+- For bluetooth control, there are two options:
+    1. If bluez is installed and the bluetooth service is running, no further
+       action is needed.
+    2. If not, the user needs to have access to `/dev/rfkill`. On some distros
+       (e.g. Archlinux), `/dev/rfkill` belongs to a group such as `rfkill`. In
+       this case, ensure $USER belongs to that group. For other distros (e.g.
+       Fedora), you can use udev to ensure `/dev/rfkill` belongs to a group. For
+       example, create `/etc/udev/rules.d/10-rfkill.rules`:
+
+               KERNEL=="rfkill", GROUP="wheel", MODE="0664"
     
        and then ensure $USER belongs to the `wheel` group.
 
