@@ -455,6 +455,15 @@ def create_vpn_actions(vpns, active):
     return _create_vpngsm_actions(vpns, active_vpns, "VPN")
 
 
+def create_vlan_actions(vlans, active):
+    """Create the list of strings to display with associated function
+    (activate/deactivate) for VLAN connections.
+
+    """
+    active_vlans = [i for i in active if "vlan" == i.get_connection_type()]
+    return _create_vpngsm_actions(vlans, active_vlans, "VLAN")
+
+
 def create_wireguard_actions(wgs, active):
     """Create the list of strings to display with associated function
     (activate/deactivate) for Wireguard connections.
@@ -529,7 +538,7 @@ def create_wwan_actions(client):
     return [Action(f"{wwan_action} WWAN", toggle_wwan, not wwan_enabled)]
 
 
-def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
+def combine_actions(eths, aps, vlans, vpns, wgs, gsms, blues, wwan, others, saved):
     # pylint: disable=too-many-arguments
     """Combine all given actions into a list of actions.
 
@@ -546,6 +555,7 @@ def combine_actions(eths, aps, vpns, wgs, gsms, blues, wwan, others, saved):
     all_actions = []
     all_actions += eths + empty_action if eths else []
     all_actions += aps + empty_action if aps else []
+    all_actions += vlans + empty_action if aps else []
     all_actions += vpns + empty_action if vpns else []
     all_actions += wgs + empty_action if wgs else []
     all_actions += gsms + empty_action if (gsms and wwan) else []
@@ -969,11 +979,13 @@ def run():  # pylint: disable=too-many-locals
         # Workaround for older versions of python-gobject with no wireguard support
         wgs = []
     eths = [i for i in CONNS if i.is_type(NM.SETTING_WIRED_SETTING_NAME)]
+    vlans = [i for i in CONNS if i.is_type(NM.SETTING_VLAN_SETTING_NAME)]
     blues = [i for i in CONNS if i.is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
 
     vpn_actions = create_vpn_actions(vpns, active)
     wg_actions = create_wireguard_actions(wgs, active)
     eth_actions = create_eth_actions(eths, active)
+    vlan_actions = create_vlan_actions(vlans, active)
     blue_actions = create_blue_actions(blues, active)
     other_actions = create_other_actions(CLIENT)
     wwan_installed = is_installed("ModemManager")
@@ -992,8 +1004,9 @@ def run():  # pylint: disable=too-many-locals
     else:
         saved_actions = [Action("Saved connections", prompt_saved, [saved_cons])]
 
-    actions = combine_actions(eth_actions, ap_actions, vpn_actions, wg_actions,
-                              gsm_actions, blue_actions, wwan_actions,
+
+    actions = combine_actions(eth_actions, ap_actions, vlan_actions, vpn_actions,
+                              wg_actions, gsm_actions, blue_actions, wwan_actions,
                               other_actions, saved_actions)
     sel = get_selection(actions)
     sel()
