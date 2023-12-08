@@ -37,8 +37,6 @@ ENC = locale.getpreferredencoding()
 CONF = configparser.ConfigParser()
 CONF.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
 
-CMD_BASE = ""
-
 
 def cli_args():
     """ Don't override dmenu_cmd function arguments with CLI args. Removes -l
@@ -569,7 +567,7 @@ def get_wofi_highlight_markup(action):
     if highlight_bg:
         style += f'background="{highlight_bg}" '
     if highlight_bold:
-        style += f'weight="bold" '
+        style += 'weight="bold" '
 
     return f"<span {style}>" + str(action) + "</span>"
 
