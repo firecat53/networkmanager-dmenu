@@ -3,6 +3,10 @@
 Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 [Wofi][7] or [fuzzel][8] instead of nm-applet
 
+**NOTE**
+
+> PR #124 changes `rofi_highlight` to `highlight` in `config.ini`.
+
 ## Features
 
 - Connect to existing NetworkManager wifi or wired connections
@@ -85,7 +89,11 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 |                      | `dmenu_command`    | `dmenu`                | Command can include arguments                    |
 |                      | `list_saved`       | `False`                |                                                  |
 |                      | `pinentry`         | None                   |                                                  |
-|                      | `rofi_highlight`   | `False`                |                                                  |
+|                      | `active_chars`     | ==                     | Prefix of active connection                      |
+|                      | `highlight`        | `False`                | Only applicable to rofi / wofi                   |
+|                      | `highlight_fg`     | None                   | Only applicable to wofi                          |
+|                      | `highlight_bg`     | None                   | Only applicable to wofi                          |
+|                      | `highlight_bold`   | `True`                 | Only applicable to wofi                          |
 |                      | `wifi_chars`       | None                   | String of 4 unicode characters                   |
 |                      | `wifi_icons`       | None                   | String of icon characters                        |
 |                      | `format`           | (depends on `compact`) | Python-style format string                       |
