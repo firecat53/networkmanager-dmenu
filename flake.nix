@@ -2,7 +2,7 @@
   description = "Manage NetworkManager connections with dmenu/rofi/wofi instead of nm-applet";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
 
   outputs = {
