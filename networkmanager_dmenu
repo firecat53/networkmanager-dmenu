@@ -555,7 +555,7 @@ def combine_actions(eths, aps, vlans, vpns, wgs, gsms, blues, wwan, others, save
     all_actions = []
     all_actions += eths + empty_action if eths else []
     all_actions += aps + empty_action if aps else []
-    all_actions += vlans + empty_action if aps else []
+    all_actions += vlans + empty_action if vlans else []
     all_actions += vpns + empty_action if vpns else []
     all_actions += wgs + empty_action if wgs else []
     all_actions += gsms + empty_action if (gsms and wwan) else []
