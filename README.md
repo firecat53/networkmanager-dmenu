@@ -102,6 +102,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 | `[dmenu_passphrase]` | `obscure`          | `False`                |                                                  |
 |                      | `obscure_color`    | `#222222`              | Only applicable to dmenu                         |
 | `[editor]`           | `gui_if_available` | `True`                 |                                                  |
+|                      | `gui`              | `nm-connection-editor` |                                                  |
 |                      | `terminal`         | `xterm`                |                                                  |
 | `[nmdm]`             | `rescan_delay`     | `5`                    | Adjust delay in re-opening nmdm following rescan |
 
