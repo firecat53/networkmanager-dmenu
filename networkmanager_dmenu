@@ -746,7 +746,7 @@ def launch_connection_editor():
     """
     terminal = CONF.get("editor", "terminal", fallback="xterm")
     gui_if_available = CONF.getboolean("editor", "gui_if_available", fallback=True)
-    gui = CONF.get("editor", "gui", fallback="gnome-control-center")
+    gui = CONF.get("editor", "gui", fallback="nm-connection-editor")
     if gui_if_available is True:
         if is_installed(gui):
             subprocess.run(gui, check=False)
