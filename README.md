@@ -19,6 +19,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 - Delete existing connections
 - Rescan wifi networks
 - Uses notify-send for notifications if available
+- Start/stop/delete existing NetworkManager Hotspots
 
 ![Screencast](nmdm.gif)
 
@@ -113,6 +114,16 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 - Run script or bind to keystroke combination
 - If desired, menu options can be passed on the command line instead of or in
   addition to the config file. These will override options in the config file.
+- Networkmanager_dmenu cannot create hotspots, but can manage existing ones. To
+  create a new NetworkManager hotspot and show a QR Code with the password:
+        
+        nmcli device wifi hotspot ifname wlp0s20f3 ssid testing password pass123456 band a
+        nmcli connection up hotspot (or use networkmanager_dmenu to enable)
+        nmcli device wifi show-password
+
+  This may not work for your setup.  [Linux-wifi-hotspot][10] is an option if
+  straight NetworkManager wifi sharing doesn't work for you.  Unfortunately,
+  these hotspots cannot be managed with networkmanager_dmenu.
 
 ## MIT License
 
@@ -125,3 +136,4 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 [7]: https://hg.sr.ht/~scoopta/wofi "Wofi"
 [8]: https://codeberg.org/dnkl/fuzzel "Fuzzel"
 [9]: https://search.nixos.org/packages? "Nix Packages"
+[10]: https://github.com/lakinduakash/linux-wifi-hotspot
