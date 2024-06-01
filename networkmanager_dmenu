@@ -455,6 +455,16 @@ def create_ap_actions(aps, active_ap, active_connection, adapter):  # noqa pylin
     return ap_actions
 
 
+def create_hotspot_actions(hotspots, active):
+    """Create the list of strings to display with associated function
+    (activate/deactivate) for NetworkManager Hotspots.
+
+    """
+    active_hotspot = [i for i in active if i.get_connection_type() == "802-11-wireless"
+                      and i.get_connection().get_setting_wireless().get_mode() == "ap"]
+    return _create_vpngsm_actions(hotspots, active_hotspot, "Hotspot")
+
+
 def create_vpn_actions(vpns, active):
     """Create the list of strings to display with associated function
     (activate/deactivate) for VPN connections.
@@ -547,7 +557,7 @@ def create_wwan_actions(client):
     return [Action(f"{wwan_action} WWAN", toggle_wwan, not wwan_enabled)]
 
 
-def combine_actions(eths, aps, vlans, vpns, wgs, gsms, blues, wwan, others, saved):
+def combine_actions(eths, aps, vlans, vpns, wgs, gsms, blues, wwan, hotspots, others, saved):
     # pylint: disable=too-many-arguments
     """Combine all given actions into a list of actions.
 
@@ -557,6 +567,7 @@ def combine_actions(eths, aps, vlans, vpns, wgs, gsms, blues, wwan, others, save
                  gsms: list of Actions
                  blues: list of Actions
                  wwan: list of Actions
+                 hotspots: list of Actions
                  others: list of Actions
     """
     compact = CONF.getboolean("dmenu", "compact", fallback=False)
@@ -570,6 +581,7 @@ def combine_actions(eths, aps, vlans, vpns, wgs, gsms, blues, wwan, others, save
     all_actions += gsms + empty_action if (gsms and wwan) else []
     all_actions += blues + empty_action if blues else []
     all_actions += wwan + empty_action if wwan else []
+    all_actions += hotspots + empty_action if hotspots else []
     all_actions += others + empty_action if others else []
     all_actions += saved + empty_action if saved else []
     return all_actions
@@ -911,8 +923,8 @@ def verify_conn(client, result, data):
 
 
 def create_ap_list(adapter, active_connections):
-    """Generate list of access points. Remove duplicate APs , keeping strongest
-    ones and the active AP
+    """Generate list of access points. Remove duplicate APs and hotspots,
+    keeping strongest ones and the active AP
 
     Args: adapter
           active_connections - list of all active connections
@@ -927,8 +939,13 @@ def create_ap_list(adapter, active_connections):
     active_ap = adapter.get_active_access_point()
     aps_all = sorted(adapter.get_access_points(),
                      key=lambda a: a.get_strength(), reverse=True)
+    if adapter.get_mode() == getattr(NM, "80211Mode").AP:
+        # Remove active hotspot from AP list
+        aps_all.remove(active_ap)
+        active_ap = None
     conns_cur = [i for i in CONNS if
                  i.get_setting_wireless() is not None and
+                 i.get_setting_wireless().get_mode() != "ap" and  # filter out hotspots
                  conn_matches_adapter(i, adapter)]
     try:
         ap_conns = active_ap.filter_connections(conns_cur)
@@ -986,6 +1003,8 @@ def run():  # pylint: disable=too-many-locals
     except AttributeError:
         # Workaround for older versions of python-gobject with no wireguard support
         wgs = []
+    hotspots = [i for i in CONNS if i.get_setting_wireless() and
+                i.get_setting_wireless().get_mode() == "ap"]
     eths = [i for i in CONNS if i.is_type(NM.SETTING_WIRED_SETTING_NAME)]
     vlans = [i for i in CONNS if i.is_type(NM.SETTING_VLAN_SETTING_NAME)]
     blues = [i for i in CONNS if i.is_type(NM.SETTING_BLUETOOTH_SETTING_NAME)]
@@ -995,6 +1014,7 @@ def run():  # pylint: disable=too-many-locals
     eth_actions = create_eth_actions(eths, active)
     vlan_actions = create_vlan_actions(vlans, active)
     blue_actions = create_blue_actions(blues, active)
+    hotspot_actions = create_hotspot_actions(hotspots, active)
     other_actions = create_other_actions(CLIENT)
     wwan_installed = is_installed("ModemManager")
     if wwan_installed:
@@ -1015,7 +1035,7 @@ def run():  # pylint: disable=too-many-locals
 
     actions = combine_actions(eth_actions, ap_actions, vlan_actions, vpn_actions,
                               wg_actions, gsm_actions, blue_actions, wwan_actions,
-                              other_actions, saved_actions)
+                              hotspot_actions, other_actions, saved_actions)
     sel = get_selection(actions)
     sel()
 
