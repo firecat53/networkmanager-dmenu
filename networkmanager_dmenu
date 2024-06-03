@@ -532,7 +532,13 @@ def _create_vpngsm_actions(cons, active_cons, label):
     actions = []
     for con in cons:
         is_active = con.get_id() in active_con_ids
-        action_name = f"{con.get_id()}:{label}"
+        try:
+            # Get hotspot ssid
+            if con.get_setting_wireless().get_mode() == 'ap':
+                hotspot = f" '{ssid_to_utf8(con.get_setting_wireless())}'"
+        except AttributeError:
+            hotspot = ""
+        action_name = f"{con.get_id()}{hotspot}:{label}"
         if is_active:
             active_connection = [a for a in active_cons
                                  if a.get_id() == con.get_id()]
