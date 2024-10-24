@@ -537,6 +537,8 @@ def _create_vpngsm_actions(cons, active_cons, label):
             # Get hotspot ssid
             if con.get_setting_wireless().get_mode() == 'ap':
                 hotspot = f" '{ssid_to_utf8(con.get_setting_wireless())}'"
+            else:
+                hotspot = ""
         except AttributeError:
             hotspot = ""
         action_name = f"{con.get_id()}{hotspot}:{label}"
