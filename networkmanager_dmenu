@@ -409,7 +409,6 @@ def strength_bars(signal_strength):
     bars = NM.utils_wifi_strength_bars(signal_strength)
     wifi_chars = CONF.get("dmenu", "wifi_chars", fallback=False)
     nbars = len(wifi_chars)
-    print(wifi_chars)
     if wifi_chars:
         bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == '*'])
     return " " * (nbars - len(bars)) + bars
