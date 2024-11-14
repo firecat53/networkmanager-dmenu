@@ -407,11 +407,10 @@ def process_vpngsm(con, activate):
 
 def strength_bars(signal_strength):
     bars = NM.utils_wifi_strength_bars(signal_strength)
-    wifi_chars = CONF.get("dmenu", "wifi_chars", fallback=False)
+    wifi_chars = CONF.get("dmenu", "wifi_chars", fallback="")
     if wifi_chars:
         bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == '*'])
-    return bars
-
+    return " " * (len(wifi_chars) - len(bars)) + bars
 
 def strength_icon(signal_strength):
     wifi_icons = CONF.get("dmenu", "wifi_icons", fallback=False)
