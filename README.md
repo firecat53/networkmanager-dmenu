@@ -1,7 +1,7 @@
 # Networkmanager-dmenu
 
 Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
-[Wofi][7] or [fuzzel][8] instead of nm-applet
+[Wofi][7], [fuzzel][8] or [walker][11] instead of nm-applet
 
 **NOTE**
 
@@ -164,3 +164,4 @@ nmcli device wifi show-password
 [8]: https://codeberg.org/dnkl/fuzzel "Fuzzel"
 [9]: https://search.nixos.org/packages? "Nix Packages"
 [10]: https://github.com/lakinduakash/linux-wifi-hotspot
+[11]: https://github.com/abenz1267/walker
