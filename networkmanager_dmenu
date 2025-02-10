@@ -17,7 +17,7 @@ import struct
 import configparser
 import locale
 import os
-from os.path import basename, expanduser
+from os.path import basename, expanduser, isfile
 import shlex
 from shutil import which
 import sys
@@ -35,7 +35,17 @@ ENV = os.environ.copy()
 ENC = locale.getpreferredencoding()
 
 CONF = configparser.ConfigParser()
-CONF.read(expanduser("~/.config/networkmanager-dmenu/config.ini"))
+
+# Default config path
+default_config_path = expanduser("~/.config/networkmanager-dmenu/config.ini")
+
+# Get the environment variable and fallback if the file doesn't exist
+config_path = os.getenv("NM_DMENU_CONFIG", default_config_path)
+if not isfile(config_path):
+    config_path = default_config_path
+
+# Read the configuration file
+CONF.read(config_path)
 
 
 def cli_args():
