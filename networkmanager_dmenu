@@ -11,12 +11,19 @@ OR running the script as root
 Add dmenu options and default terminal if desired to
 ~/.config/networkmanager-dmenu/config.ini
 
+To specify a custom config file location, use:
+--config /path/to/config.ini          (command line argument)
+OR
+NM_DMENU_CONFIG=/path/to/config.ini   (environment variable)
+
+The command line argument takes precedence over the environment variable.
 """
 import pathlib
 import struct
 import configparser
 import locale
 import os
+import argparse
 from os.path import basename, expanduser, isfile
 import shlex
 from shutil import which
@@ -39,10 +46,39 @@ CONF = configparser.ConfigParser()
 # Default config path
 default_config_path = expanduser("~/.config/networkmanager-dmenu/config.ini")
 
-# Get the environment variable and fallback if the file doesn't exist
-config_path = os.getenv("NM_DMENU_CONFIG", default_config_path)
-if not isfile(config_path):
-    config_path = default_config_path
+# Parse command-line arguments for config flag
+def parse_args():
+    parser = argparse.ArgumentParser(description='NetworkManager dmenu')
+    parser.add_argument('--config', dest='config_path', 
+                       help='Path to configuration file')
+    # Parse only the --config argument, leaving the rest for dmenu
+    # This allows us to maintain compatibility with existing command line flags
+    args, remaining = parser.parse_known_args()
+    # Put the remaining args back into sys.argv for cli_args() to use
+    sys.argv[1:] = remaining
+    return args
+
+args = parse_args()
+
+# Config file priority:
+# 1. Command line --config flag
+# 2. NM_DMENU_CONFIG environment variable
+# 3. Default path (~/.config/networkmanager-dmenu/config.ini)
+if args.config_path:
+    # Command line flag takes precedence if provided
+    if isfile(args.config_path):
+        config_path = args.config_path
+    else:
+        # Use default if specified file doesn't exist
+        config_path = default_config_path
+else:
+    # Check environment variable
+    env_config_path = os.getenv("NM_DMENU_CONFIG")
+    if env_config_path and isfile(env_config_path):
+        config_path = env_config_path
+    else:
+        # Fall back to default path
+        config_path = default_config_path
 
 # Read the configuration file
 CONF.read(config_path)

@@ -52,6 +52,10 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 
 - To customize behavior, copy config.ini.example to
   ~/.config/networkmanager-dmenu/config.ini and edit.
+- Alternatively, specify a custom config file location using:
+  - Command line: `--config /path/to/config.ini`
+  - Environment variable: `NM_DMENU_CONFIG=/path/to/config.ini networkmanager_dmenu`
+  - The command line flag takes precedence over the environment variable
 - All theming is done through the respective menu programs. Set `dmenu_command`
   with the desired options, including things like `-i` for case insensitivity.
   See config.ini.example for examples.
@@ -110,7 +114,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 
 ## Usage
 
-`networkmanager_dmenu [-h] <menu args>`
+`networkmanager_dmenu [-h] [--config CONFIG_PATH] <menu args>`
 
 - Run script or bind to keystroke combination
 - If desired, menu options can be passed on the command line instead of or in
