@@ -54,7 +54,8 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
   ~/.config/networkmanager-dmenu/config.ini and edit.
 - Alternatively, specify a custom config file location using:
   - Command line: `--config /path/to/config.ini`
-  - Environment variable: `NM_DMENU_CONFIG=/path/to/config.ini networkmanager_dmenu`
+  - Environment variable: `NM_DMENU_CONFIG=/path/to/config.ini
+    networkmanager_dmenu`
   - The command line flag takes precedence over the environment variable
 - All theming is done through the respective menu programs. Set `dmenu_command`
   with the desired options, including things like `-i` for case insensitivity.
@@ -72,16 +73,16 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
   or ~/.local/share/applications.
 - If you want to run the script as $USER instead of ROOT
     1. Set [PolicyKit permissions][5]. The script is usable for connecting to
-       pre-existing connections without setting these, but you won't be able to
-       enable/disable networking or add new connections.
+    pre-existing connections without setting these, but you won't be able to
+    enable/disable networking or add new connections.
 - For bluetooth control, there are two options:
     1. If bluez is installed and the bluetooth service is running, no further
-       action is needed.
+    action is needed.
     2. If not, the user needs to have access to `/dev/rfkill`. On some distros
-       (e.g. Archlinux), `/dev/rfkill` belongs to a group such as `rfkill`. In
-       this case, ensure $USER belongs to that group. For other distros (e.g.
-       Fedora), you can use udev to ensure `/dev/rfkill` belongs to a group. For
-       example, create `/etc/udev/rules.d/10-rfkill.rules`:
+    (e.g. Archlinux), `/dev/rfkill` belongs to a group such as `rfkill`. In this
+    case, ensure $USER belongs to that group. For other distros (e.g. Fedora),
+    you can use udev to ensure `/dev/rfkill` belongs to a group. For example,
+    create `/etc/udev/rules.d/10-rfkill.rules`:
 
                KERNEL=="rfkill", GROUP="wheel", MODE="0664"
     
@@ -121,14 +122,16 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
   addition to the config file. These will override options in the config file.
 - Networkmanager_dmenu cannot create hotspots, but can manage existing ones. To
   create a new NetworkManager hotspot and show a QR Code with the password:
-        
-        nmcli device wifi hotspot ifname wlp0s20f3 ssid testing password pass123456 band a
-        nmcli connection up hotspot (or use networkmanager_dmenu to enable)
-        nmcli device wifi show-password
 
-  This may not work for your setup.  [Linux-wifi-hotspot][10] is an option if
-  straight NetworkManager wifi sharing doesn't work for you.  Unfortunately,
-  these hotspots cannot be managed with networkmanager_dmenu.
+```bash
+nmcli device wifi hotspot ifname wlp0s20f3 ssid testing password pass123456 band a
+nmcli connection up hotspot (or use networkmanager_dmenu to enable)
+nmcli device wifi show-password
+```
+
+  This may not work for your setup.  [Linux-wifi-hotspot][10] is an option if straight
+  NetworkManager wifi sharing doesn't work for you.  Unfortunately, these hotspots cannot be managed
+  with networkmanager_dmenu.
 
 ## MIT License
 
