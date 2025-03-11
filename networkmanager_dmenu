@@ -175,7 +175,7 @@ def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
         pass_prompts = {
             "dmenu": dmenu_pass(cmd_base, obscure_color),
             "rofi": ["-password"],
-            "bemenu": ["-x"],
+            "bemenu": ["-x", "indicator"],
             "wofi": ["-P"],
             "fuzzel": ["--password"],
         }
