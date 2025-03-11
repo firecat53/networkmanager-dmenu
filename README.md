@@ -130,8 +130,8 @@ nmcli device wifi show-password
 ```
 
   This may not work for your setup.  [Linux-wifi-hotspot][10] is an option if straight
-  NetworkManager wifi sharing doesn't work for you.  Unfortunately, these hotspots cannot be managed
-  with networkmanager_dmenu.
+  NetworkManager wifi sharing doesn't work for you.  Unfortunately, these
+  hotspots cannot be managed with networkmanager_dmenu.
 
 ## MIT License
 
