@@ -35,6 +35,10 @@
 # # https://tools.suckless.org/dmenu/patches/password/
 # obscure = True
 # obscure_color = #222222
+# # show_pass is the complete CLI command to show current WiFi password in a new terminal window.
+# # Typically `<terminal --hold -e nmcli device wifi show-password>`
+# show_pass = alacritty --hold -e nmcli device wifi show-password
+# show_pass = foot bash -c "nmcli device wifi show-password; read -n1 -p 'Press any key...'"
 
 [pinentry]
 # description = <Pinentry description> (Default: Get network password)

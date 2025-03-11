@@ -20,6 +20,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 - Rescan wifi networks
 - Uses notify-send for notifications if available
 - Start/stop/delete existing NetworkManager Hotspots
+- Show password/QR code for current Wifi network
 
 ![Screencast](nmdm.gif)
 
@@ -45,7 +46,8 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 7. (optional) Pinentry. Make sure to set which flavor of pinentry command to use
    in the config file.
 8. (optional) ModemManager for WWAN support.
-9. (optional) notify-send for notifications (connected, disconnected, etc.)
+9. (optional) notify-send (libnotify) for notifications (connected,
+   disconnected, etc.)
 10. (optional) bluez package for bluetooth control
 
 ## Configuration 
@@ -66,6 +68,9 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
   password patch][6] `-P` option is supported if that patch is installed. Rofi,
   Wofi and Bemenu will use their respective flags for passphrase entry.
 - Set default terminal (xterm, urxvtc, etc.) command in config.ini if desired.
+- Configure `show_pass` to run `nmcli dev wifi show-password` in a terminal.
+  This may take some experimentation to determine what will work for your
+  terminal.
 - Saved connections can be listed if desired. Set `list_saved = True` under
   `[dmenu]` in config.ini. If set to `False`, saved connections are still
   accessible under a "Saved connections" sub-menu.
@@ -108,6 +113,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 |                      | `prompt`           | `Password:`            |                                                  |
 | `[dmenu_passphrase]` | `obscure`          | `False`                |                                                  |
 |                      | `obscure_color`    | `#222222`              | Only applicable to dmenu                         |
+|                      | `show_pass`        | See config.ini.example | CLI to run `nmcli d wifi show-password`          |
 | `[editor]`           | `gui_if_available` | `True`                 |                                                  |
 |                      | `gui`              | `nm-connection-editor` |                                                  |
 |                      | `terminal`         | `xterm`                | Can include terminal arguments                   |

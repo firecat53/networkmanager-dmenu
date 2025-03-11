@@ -943,20 +943,20 @@ def launch_connection_editor():
 
 def show_wifi_password():
     """Run `nmcli device wifi show-password` for current connection"""
-    terminal = CONF.get("editor", "terminal", fallback="xterm")
-    subprocess.run(
-        [
-            terminal,
+    terminal = shlex.split(CONF.get("editor", "terminal", fallback="xterm"))
+    cmd = shlex.split(CONF.get("dmenu_passphrase", "show_pass", fallback=""))
+    if cmd and is_installed(cmd[0]):
+        subprocess.run(cmd, check=False)
+    elif is_installed(terminal[0]):
+        fallback = terminal + [
             "-e",
-            "nmcli",
-            "device",
-            "wifi",
-            "show-password;",
-            "exec",
             "bash",
-        ],
-        check=False,
-    )
+            "-c",
+            "nmcli device wifi show-password; read -n1 -p 'Press any key to close...'",
+        ]
+        subprocess.run(fallback, check=False)
+    else:
+        notify("`terminal` and/or `show_pass` not configured. See README.")
 
 
 def get_passphrase():
