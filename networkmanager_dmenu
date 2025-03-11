@@ -88,25 +88,30 @@ CONF.read(config_path)
 
 
 def cli_args():
-    """Don't override dmenu_cmd function arguments with CLI args. Removes -l
-    and -p if those are passed on the command line.
+    """Allow command line arguments override config settings,
+    except for -p/--prompt which should be controlled by the script.
 
-    Exception: if -l is passed and dmenu_command is not defined, assume that the
-    user wants to switch dmenu to the vertical layout and include -l.
-
-        Returns: List of additional CLI arguments
-
+    Returns: List of CLI arguments with -p/--prompt removed if present
     """
     args = sys.argv[1:]
-    cmd = CONF.get("dmenu", "dmenu_command", fallback=False)
-    if "-l" in args or "-p" in args:
-        for nope in ["-l", "-p"] if cmd is not False else ["-p"]:
-            try:
-                nope_idx = args.index(nope)
-                del args[nope_idx]
-                del args[nope_idx]
-            except ValueError:
-                pass
+
+    # List of prompt flags to remove (both short and long forms)
+    prompt_flags = ["-p", "--prompt"]
+
+    i = 0
+    while i < len(args):
+        # Check for standalone prompt flags
+        if args[i] in prompt_flags:
+            del args[i]
+            if i < len(args):  # Make sure we don't go out of bounds
+                del args[i]
+        # Check for combined format (-ptext)
+        elif args[i].startswith("-p") and len(args[i]) > 2:
+            del args[i]
+        # For all other flags, keep them to override config
+        else:
+            i += 1
+
     return args
 
 
@@ -134,7 +139,7 @@ def dmenu_pass(command, color):
     return ["-P"] if dm_patch else ["-nb", color, "-nf", color]
 
 
-def dmenu_cmd(num_lines, prompt="Networks", active_lines=None):
+def dmenu_cmd(prompt="Networks", active_lines=None):
     """Parse config.ini for menu options
 
     Args: args - num_lines: number of lines to display
@@ -193,7 +198,7 @@ def choose_adapter(client):
         return devices[0]
     device_names = "\n".join([d.get_iface() for d in devices])
     sel = subprocess.run(
-        dmenu_cmd(len(devices), "CHOOSE ADAPTER:"),
+        dmenu_cmd("CHOOSE ADAPTER:"),
         capture_output=True,
         check=False,
         env=ENV,
@@ -290,7 +295,7 @@ def rescan_wifi():
     """
     delay = CONF.getint("nmdm", "rescan_delay", fallback=5)
     for dev in CLIENT.get_devices():
-        if gi.repository.NM.DeviceWifi == type(dev):
+        if gi.repository.NM.DeviceWifi is type(dev):
             try:
                 dev.request_scan_async(None, rescan_cb, None)
                 LOOP.run()
@@ -304,7 +309,7 @@ def rescan_wifi():
                     raise err
 
 
-def rescan_cb(dev, res, data):
+def rescan_cb(dev, res, _):
     """Callback for rescan_wifi. Just for notifications"""
     if dev.request_scan_finish(res) is True:
         notify("Wifi scan running...")
@@ -485,7 +490,7 @@ def strength_bars(signal_strength):
 
 
 def strength_icon(signal_strength):
-    wifi_icons = CONF.get("dmenu", "wifi_icons", fallback=False)
+    wifi_icons = CONF.get("dmenu", "wifi_icons", fallback="")
     if wifi_icons:
         return wifi_icons[round(signal_strength / 100 * (len(wifi_icons) - 1))]
     return ""
@@ -746,7 +751,7 @@ def get_selection(all_actions):
         index for index, action in enumerate(all_actions) if action.is_active
     ]
 
-    command = dmenu_cmd(len(inp), active_lines=active_lines)
+    command = dmenu_cmd(active_lines=active_lines)
     sel = subprocess.run(
         command,
         capture_output=True,
@@ -980,7 +985,7 @@ def get_passphrase():
                 pin = res[0].split("D ")[1]
         return pin
     return subprocess.run(
-        dmenu_cmd(0, "Passphrase"),
+        dmenu_cmd("Passphrase"),
         stdin=subprocess.DEVNULL,
         capture_output=True,
         check=False,
@@ -996,7 +1001,7 @@ def delete_connection():
     ]
     conn_names = "\n".join([str(i) for i in conn_acts])
     sel = subprocess.run(
-        dmenu_cmd(len(conn_acts), "CHOOSE CONNECTION TO DELETE:"),
+        dmenu_cmd("CHOOSE CONNECTION TO DELETE:"),
         capture_output=True,
         check=False,
         input=conn_names,
@@ -1012,7 +1017,7 @@ def delete_connection():
     LOOP.run()
 
 
-def delete_cb(dev, res, data):
+def delete_cb(dev, res, _):
     """Notification if delete completed successfully"""
     if dev.delete_finish(res) is True:
         notify(f"Deleted {dev.get_id()}")
@@ -1101,9 +1106,9 @@ def verify_conn(client, result, data):
     is an error.
 
     """
+    act_conn = client.add_and_activate_connection_finish(result)
+    conn = act_conn.get_connection()
     try:
-        act_conn = client.add_and_activate_connection_finish(result)
-        conn = act_conn.get_connection()
         if not all(
             [
                 conn.verify(),
@@ -1156,7 +1161,7 @@ def create_ap_list(adapter, active_connections):
         and conn_matches_adapter(i, adapter)
     ]
     try:
-        ap_conns = active_ap.filter_connections(conns_cur)
+        ap_conns = active_ap.filter_connections(conns_cur) if active_ap else []
         active_ap_name = ssid_to_utf8(active_ap)
         active_ap_con = [
             active_conn
