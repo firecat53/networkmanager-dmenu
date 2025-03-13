@@ -1,53 +1,60 @@
 [dmenu]
-# dmenu_command = /usr/bin/dmenu
-# # Note that dmenu_command can contain arguments as well like:
-# # `dmenu_command = rofi -dmenu -i -theme nmdm`
-# # `dmenu_command = rofi -dmenu -width 30 -i`
-# # `dmenu_command = dmenu -i -l 25 -b -nb #909090 -nf #303030`
-# # `dmenu_command = fuzzel --dmenu`
-# # `dmenu_command = wofi --dmenu`
-# active_chars = ==
-# highlight = <True or False> # (Default: False) use highlighting instead of active_chars (only applicable to Rofi / Wofi)
-# highlight_fg = <Color> # (Default: None) foreground color of active connection (only applicable to Wofi)
-# highlight_bg = <Color> # (Default: None) background color of active connection (only applicable to Wofi)
-# highlight_bold = <True or False> # (Default: True) make active connection bold (only applicable to Wofi)
-# compact = <True or False> # (Default: False). Remove extra spacing from display
-# pinentry = <Pinentry command>  # (Default: None) e.g. `pinentry-gtk`
-# wifi_chars = <string of 4 unicode characters representing 1-4 bars strength>
-# wifi_chars = ▂▄▆█
-# wifi_icons = <characters representing signal strength as an icon>
+dmenu_command = dmenu
+# Note that dmenu_command can contain arguments as well like:
+# `dmenu_command = rofi -dmenu -i -theme nmdm`
+# `dmenu_command = rofi -dmenu -width 30 -i`
+# `dmenu_command = dmenu -i -l 25 -b -nb #909090 -nf #303030`
+# `dmenu_command = fuzzel --dmenu`
+active_chars = ==
+# Use highlighting instead of active_chars (only applicable to Rofi / Wofi)
+highlight = False
+# Foreground color of active connection (only applicable to Wofi)
+highlight_fg = None
+# Background color of active connection (only applicable to Wofi)
+highlight_bg = None
+# Make active connection bold (only applicable to Wofi)
+highlight_bold = True
+# Remove extra spacing from display
+compact = False
+# Pinentry command e.g. `pinentry-gtk`
+pinentry = None
+# String of 4 unicode characters representing 1-4 bars strength
+wifi_chars = ▂▄▆█
+# Characters representing signal strength as an icon
 # wifi_icons = 󰤯󰤟󰤢󰤥󰤨
-# format = <Python style format string for the access point entries>
-# format = {name}  {sec}  {bars}
-# # Available variables are:
-# #  * {name} - Access point name
-# #  * {sec} - Security type
-# #  * {signal} - Signal strength on a scale of 0-100
-# #  * {bars} - Bar-based display of signal strength (see wifi_chars)
-# #  * {icon} - Icon-based display of signal strength (see wifi_icons)
-# #  * {max_len_name} and {max_len_sec} are the maximum lengths of {name} / {sec}
-# #    respectively and may be useful for formatting.
-# list_saved = <True or False> # (Default: False) list saved connections
+# Python style format string for the access point entries
+format = {name}  {sec}  {bars}
+# Available variables are:
+#  * {name} - Access point name
+#  * {sec} - Security type
+#  * {signal} - Signal strength on a scale of 0-100
+#  * {bars} - Bar-based display of signal strength (see wifi_chars)
+#  * {icon} - Icon-based display of signal strength (see wifi_icons)
+#  * {max_len_name} and {max_len_sec} are the maximum lengths of {name} / {sec}
+#    respectively and may be useful for formatting.
+# List saved connections
+list_saved = False
 
 [dmenu_passphrase]
-# # Uses the -password flag for Rofi, -x for bemenu. For dmenu, sets -nb and
-# # -nf to the same color or uses -P if the dmenu password patch is applied
-# # https://tools.suckless.org/dmenu/patches/password/
-# obscure = True
-# obscure_color = #222222
-# # show_pass is the complete CLI command to show current WiFi password in a new terminal window.
-# # Typically `<terminal --hold -e nmcli device wifi show-password>`
+# Uses the -password flag for Rofi, -x for bemenu. For dmenu, sets -nb and
+# -nf to the same color or uses -P if the dmenu password patch is applied
+# https://tools.suckless.org/dmenu/patches/password/
+obscure = False
+obscure_color = #222222
+# show_pass is the complete CLI command to show current WiFi password in a new terminal window.
+# Typically `<terminal --hold -e nmcli device wifi show-password>`
 # show_pass = alacritty --hold -e nmcli device wifi show-password
 # show_pass = foot bash -c "nmcli device wifi show-password; read -n1 -p 'Press any key...'"
 
 [pinentry]
-# description = <Pinentry description> (Default: Get network password)
-# prompt = <Pinentry prompt> (Default: Password:)
+description = Get network password
+prompt = Password:
 
 [editor]
-# terminal = <name of terminal program> <arguments>
-# gui_if_available = <True or False> (Default: True)
-# gui = <name of gui editor> (Default: nm-connection-editor)
+terminal = xterm
+gui_if_available = True
+gui = nm-connection-editor
 
 [nmdm]
-# rescan_delay = <seconds>  # (seconds to wait after a wifi rescan before redisplaying the results)
+# seconds to wait after a wifi rescan before redisplaying the results
+rescan_delay = 5

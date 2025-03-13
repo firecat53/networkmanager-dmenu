@@ -43,8 +43,185 @@ ENC = locale.getpreferredencoding()
 
 CONF = configparser.ConfigParser()
 
-# Default config path
-default_config_path = expanduser("~/.config/networkmanager-dmenu/config.ini")
+# Default config paths
+default_config_dir = expanduser("~/.config/networkmanager-dmenu")
+default_config_path = os.path.join(default_config_dir, "config.ini")
+
+
+def generate_default_config(launcher="dmenu", terminal="xterm"):
+    """Generate a minimal default config with the given launcher and terminal
+    
+    Ensures proper dmenu mode flags are included for each launcher.
+    
+    Args:
+        launcher: The launcher program to use (dmenu, rofi, etc.)
+        terminal: The terminal program to use
+        
+    Returns:
+        str: Complete config file content
+    """
+    # Add proper flags for each launcher to enable dmenu mode
+    launcher_cmd = {
+        "dmenu": "dmenu",
+        "rofi": "rofi -dmenu",
+        "bemenu": "bemenu",
+        "wofi": "wofi --dmenu",
+        "fuzzel": "fuzzel --dmenu --log-level none"
+    }.get(launcher, launcher)  # Default to just the launcher name if not in our list
+    return f"""[dmenu]
+dmenu_command = {launcher_cmd}
+active_chars = ==
+highlight = False
+highlight_fg = None
+highlight_bg = None
+highlight_bold = True
+compact = False
+pinentry = None
+wifi_icons = 󰤯󰤟󰤢󰤥󰤨
+format = {{name:<{{max_len_name}}s}}  {{sec:<{{max_len_sec}}s}} {{icon:>4}}
+list_saved = False
+
+[dmenu_passphrase]
+obscure = False
+obscure_color = #222222
+
+[pinentry]
+description = Get network password
+prompt = Password:
+
+[editor]
+terminal = {terminal}
+gui_if_available = True
+gui = nm-connection-editor
+
+[nmdm]
+rescan_delay = 5
+"""
+
+
+def is_installed(cmd):
+    """Check if a utility is installed"""
+    return which(cmd) is not None
+
+
+# List of supported launchers
+SUPPORTED_LAUNCHERS = ["dmenu", "rofi", "bemenu", "wofi", "fuzzel"]
+# List of common terminals
+COMMON_TERMINALS = [
+    "xterm",
+    "alacritty",
+    "kitty",
+    "gnome-terminal",
+    "konsole",
+    "terminator",
+    "xfce4-terminal",
+    "foot",
+    "footclient",
+    "urxvt",
+]
+
+
+def detect_installed_launchers():
+    """Detect which supported launchers are installed on the system"""
+    return [
+        launcher for launcher in SUPPORTED_LAUNCHERS if is_installed(launcher)
+    ]
+
+
+def detect_installed_terminals():
+    """Detect which common terminals are installed on the system"""
+    return [terminal for terminal in COMMON_TERMINALS if is_installed(terminal)]
+
+
+def prompt_command_line(prompt, options):
+    """Prompt the user for a selection via command line"""
+    print(f"\n{prompt}")
+    for i, option in enumerate(options, 1):
+        print(f"{i}. {option}")
+
+    while True:
+        try:
+            choice = input("Enter your choice (number): ")
+            idx = int(choice) - 1
+            if 0 <= idx < len(options):
+                return options[idx]
+            print("Invalid selection. Please try again.")
+        except ValueError:
+            print("Please enter a number.")
+
+
+def setup_initial_config():
+    """Interactive setup to create initial config with user preferences
+
+    Returns:
+        bool: True if configuration was successfully created, False otherwise
+    """
+    print("\nWelcome to networkmanager-dmenu!")
+    print("Setting up initial configuration...")
+
+    # Create config directory if it doesn't exist
+    if not os.path.exists(default_config_dir):
+        try:
+            os.makedirs(default_config_dir)
+        except OSError as e:
+            print(f"Error creating config directory: {e}", file=sys.stderr)
+            return False
+
+    # Detect installed launchers
+    installed_launchers = detect_installed_launchers()
+    if not installed_launchers:
+        print("No supported launchers (dmenu, rofi, etc.) found.")
+        print("Please install one of the supported launchers and try again.")
+        return False
+
+    # Prompt user to choose launcher
+    chosen_launcher = None
+    if len(installed_launchers) == 1:
+        chosen_launcher = installed_launchers[0]
+        print(f"Found launcher: {chosen_launcher}")
+    else:
+        print("Multiple launchers detected.")
+        chosen_launcher = prompt_command_line(
+            "Which launcher would you like to use?", installed_launchers
+        )
+
+    # Detect installed terminals
+    installed_terminals = detect_installed_terminals()
+    chosen_terminal = None
+
+    if not installed_terminals:
+        print("No common terminals detected.")
+        custom_terminal = input("Enter the name of your terminal: ")
+        if custom_terminal.strip():
+            chosen_terminal = custom_terminal.strip()
+    elif len(installed_terminals) == 1:
+        chosen_terminal = installed_terminals[0]
+        print(f"Found terminal: {chosen_terminal}")
+    else:
+        print("Multiple terminals detected.")
+        chosen_terminal = prompt_command_line(
+            "Which terminal would you like to use?", installed_terminals
+        )
+
+    # Create config file with user's preferences
+    try:
+        # Generate minimal config with chosen launcher and terminal
+        config_content = generate_default_config(
+            launcher=chosen_launcher,
+            terminal=chosen_terminal or "xterm",  # Use xterm as fallback
+        )
+
+        # Write the config
+        with open(default_config_path, "w") as dst:
+            dst.write(config_content)
+
+        print(f"\nConfiguration file created at: {default_config_path}")
+        print("You can customize it further by editing this file directly.")
+        return True
+
+    except Exception as e:
+        print(f"Error creating config file: {e}", file=sys.stderr)
+        return False
 
 
 # Parse command-line arguments for config flag
@@ -82,6 +259,15 @@ else:
     else:
         # Fall back to default path
         config_path = default_config_path
+
+# Check if this is first run (no config file exists)
+first_run = not os.path.exists(config_path)
+if first_run:
+    print("No configuration file found. Starting initial setup...")
+    if setup_initial_config():
+        print("Initial setup complete. Starting networkmanager-dmenu...")
+    else:
+        print("Initial setup failed. Using default settings.")
 
 # Read the configuration file
 CONF.read(config_path)
@@ -211,11 +397,6 @@ def choose_adapter(client):
     if len(devices) != 1:
         raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
     return devices[0]
-
-
-def is_installed(cmd):
-    """Check if a utility is installed"""
-    return which(cmd) is not None
 
 
 def is_running(cmd):

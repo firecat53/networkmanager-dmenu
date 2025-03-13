@@ -32,6 +32,8 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
   - Gentoo: [Woomy Overlay][4]
   - Nix: [Nix Packages][9]
 
+- Run `./networkmanager_dmenu` in your terminal to generate the config file. 
+ 
 ## Requirements
 
 1. Python 3.7+
@@ -52,8 +54,18 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 
 ## Configuration 
 
-- To customize behavior, copy config.ini.example to
-  ~/.config/networkmanager-dmenu/config.ini and edit.
+### Initial Setup
+
+- Run `./networkmanager_dmenu` in your terminal to generate the config file.
+  Checks for installed launchers and terminals and prompts for selection. The
+  generated config file will be created at:
+  `~/.config/networkmanager-dmenu/config.ini`
+
+### Custom Configuration
+
+- To customize behavior further, edit the generated configuration file
+- You can also manually copy config.ini.example to
+  ~/.config/networkmanager-dmenu/config.ini and edit it directly
 - Alternatively, specify a custom config file location using:
   - Command line: `--config /path/to/config.ini`
   - Environment variable: `NM_DMENU_CONFIG=/path/to/config.ini
@@ -67,7 +79,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
   background colors to be the same to obscure the passphrase. The [Suckless
   password patch][6] `-P` option is supported if that patch is installed. Rofi,
   Wofi and Bemenu will use their respective flags for passphrase entry.
-- Set default terminal (xterm, urxvtc, etc.) command in config.ini if desired.
+- Set default terminal (xterm, urxvtc, etc.) command in config.ini.
 - Configure `show_pass` to run `nmcli dev wifi show-password` in a terminal.
   This may take some experimentation to determine what will work for your
   terminal.
