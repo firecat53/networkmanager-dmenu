@@ -19,19 +19,19 @@ NM_DMENU_CONFIG=/path/to/config.ini   (environment variable)
 The command line argument takes precedence over the environment variable.
 """
 
-import pathlib
-import struct
+from os.path import basename, expanduser, isfile
+from shutil import which
+from time import sleep
+import argparse
 import configparser
 import locale
 import os
-import argparse
-from os.path import basename, expanduser, isfile
+import pathlib
 import shlex
-from shutil import which
-import sys
-from time import sleep
-import uuid
+import struct
 import subprocess
+import sys
+import uuid
 
 import gi
 
@@ -96,19 +96,19 @@ def is_installed(cmd):
 
 
 # List of supported launchers
-SUPPORTED_LAUNCHERS = ["dmenu", "rofi", "bemenu", "wofi", "fuzzel"]
+SUPPORTED_LAUNCHERS = ["bemenu", "dmenu", "fuzzel", "rofi", "wofi"]
 # List of common terminals
 COMMON_TERMINALS = [
-    "xterm",
     "alacritty",
-    "kitty",
-    "gnome-terminal",
-    "konsole",
-    "terminator",
-    "xfce4-terminal",
     "foot",
     "footclient",
+    "gnome-terminal",
+    "kitty",
+    "konsole",
+    "terminator",
     "urxvt",
+    "xfce4-terminal",
+    "xterm",
 ]
 
 
@@ -331,11 +331,11 @@ def dmenu_cmd(prompt, active_lines=None):
     """
     # Create command string
     commands = {
-        "dmenu": ["-p", str(prompt)],
-        "rofi": ["-dmenu", "-p", str(prompt)],
         "bemenu": ["-p", str(prompt)],
-        "wofi": ["--dmenu", "-p", str(prompt)],
+        "dmenu": ["-p", str(prompt)],
         "fuzzel": ["--dmenu", "-p", str(prompt)],
+        "rofi": ["-dmenu", "-p", str(prompt)],
+        "wofi": ["--dmenu", "-p", str(prompt)],
     }
     command = shlex.split(CONF.get("dmenu", "dmenu_command", fallback="dmenu"))
     command = cli_args(command)  # Strip unnecessary extra prompt/dmenu flags
@@ -359,11 +359,11 @@ def dmenu_cmd(prompt, active_lines=None):
             "dmenu_passphrase", "obscure_color", fallback="#222222"
         )
         pass_prompts = {
-            "dmenu": dmenu_pass(cmd_base, obscure_color),
-            "rofi": ["-password"],
             "bemenu": ["-x", "indicator"],
-            "wofi": ["-P"],
+            "dmenu": dmenu_pass(cmd_base, obscure_color),
             "fuzzel": ["--password"],
+            "rofi": ["-password"],
+            "wofi": ["-P"],
         }
         command.extend(pass_prompts.get(cmd_base, []))
     return command
