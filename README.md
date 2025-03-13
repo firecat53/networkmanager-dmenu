@@ -118,6 +118,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 |                      | `highlight_fg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bold`   | `True`                 | Only applicable to wofi                          |
+|                      | `prompt`           | Networks               |                                                  |
 |                      | `wifi_chars`       | None                   | String of 4 unicode characters                   |
 |                      | `wifi_icons`       | None                   | String of icon characters                        |
 |                      | `format`           | (depends on `compact`) | Python-style format string                       |

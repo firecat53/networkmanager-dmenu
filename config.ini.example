@@ -34,6 +34,8 @@ format = {name}  {sec}  {bars}
 #    respectively and may be useful for formatting.
 # List saved connections
 list_saved = False
+# Custom prompt
+prompt = Networks
 
 [dmenu_passphrase]
 # Uses the -password flag for Rofi, -x for bemenu. For dmenu, sets -nb and

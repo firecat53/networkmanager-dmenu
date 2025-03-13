@@ -80,6 +80,7 @@ pinentry = None
 wifi_icons = 󰤯󰤟󰤢󰤥󰤨
 format = {{name:<{{max_len_name}}s}}  {{sec:<{{max_len_sec}}s}} {{icon:>4}}
 list_saved = False
+prompt = Networks
 
 [dmenu_passphrase]
 obscure = False
@@ -325,7 +326,7 @@ def dmenu_pass(command, color):
     return ["-P"] if dm_patch else ["-nb", color, "-nf", color]
 
 
-def dmenu_cmd(prompt="Networks", active_lines=None):
+def dmenu_cmd(prompt, active_lines=None):
     """Parse config.ini for menu options
 
     Args: args - num_lines: number of lines to display
@@ -932,7 +933,8 @@ def get_selection(all_actions):
         index for index, action in enumerate(all_actions) if action.is_active
     ]
 
-    command = dmenu_cmd(active_lines=active_lines)
+    prompt = CONF.get("dmenu", "prompt", fallback="Networks")
+    command = dmenu_cmd(prompt, active_lines=active_lines)
     sel = subprocess.run(
         command,
         capture_output=True,
