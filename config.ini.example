@@ -1,10 +1,10 @@
 [dmenu]
 dmenu_command = dmenu
 # Note that dmenu_command can contain arguments as well like:
-# `dmenu_command = rofi -dmenu -i -theme nmdm`
-# `dmenu_command = rofi -dmenu -width 30 -i`
+# `dmenu_command = rofi -i -theme nmdm`
+# `dmenu_command = rofi -width 30 -i`
 # `dmenu_command = dmenu -i -l 25 -b -nb #909090 -nf #303030`
-# `dmenu_command = fuzzel --dmenu`
+# `dmenu_command = fuzzel`
 active_chars = ==
 # Use highlighting instead of active_chars (only applicable to Rofi / Wofi)
 highlight = True
