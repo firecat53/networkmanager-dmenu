@@ -114,7 +114,7 @@ Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
 |                      | `list_saved`       | `False`                |                                                  |
 |                      | `pinentry`         | None                   |                                                  |
 |                      | `active_chars`     | ==                     | Prefix of active connection                      |
-|                      | `highlight`        | `False`                | Only applicable to rofi / wofi                   |
+|                      | `highlight`        | `True`                | Only applicable to rofi / wofi                   |
 |                      | `highlight_fg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bold`   | `True`                 | Only applicable to wofi                          |

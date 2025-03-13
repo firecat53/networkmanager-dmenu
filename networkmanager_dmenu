@@ -61,9 +61,9 @@ def generate_default_config(launcher="dmenu", terminal="xterm"):
     return f"""[dmenu]
 dmenu_command = {launcher}
 active_chars = ==
-highlight = False
-highlight_fg = None
-highlight_bg = None
+highlight = True
+highlight_fg =
+highlight_bg =
 highlight_bold = True
 compact = False
 pinentry = None
@@ -884,8 +884,8 @@ def combine_actions(
 
 
 def get_wofi_highlight_markup(action):
-    highlight_fg = CONF.get("dmenu", "highlight_fg", fallback=None)
-    highlight_bg = CONF.get("dmenu", "highlight_bg", fallback=None)
+    highlight_fg = CONF.get("dmenu", "highlight_fg", fallback="")
+    highlight_bg = CONF.get("dmenu", "highlight_bg", fallback="")
     highlight_bold = CONF.getboolean("dmenu", "highlight_bold", fallback=True)
 
     style = ""

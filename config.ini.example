@@ -7,11 +7,11 @@ dmenu_command = dmenu
 # `dmenu_command = fuzzel --dmenu`
 active_chars = ==
 # Use highlighting instead of active_chars (only applicable to Rofi / Wofi)
-highlight = False
+highlight = True
 # Foreground color of active connection (only applicable to Wofi)
-highlight_fg = None
+highlight_fg = #5E35B1
 # Background color of active connection (only applicable to Wofi)
-highlight_bg = None
+highlight_bg = #E0E0E0
 # Make active connection bold (only applicable to Wofi)
 highlight_bold = True
 # Remove extra spacing from display
