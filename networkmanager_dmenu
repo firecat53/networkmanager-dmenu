@@ -49,27 +49,17 @@ default_config_path = os.path.join(default_config_dir, "config.ini")
 
 
 def generate_default_config(launcher="dmenu", terminal="xterm"):
-    """Generate a minimal default config with the given launcher and terminal
-    
-    Ensures proper dmenu mode flags are included for each launcher.
-    
+    """Generate a minimal default config with the given launcher and terminal.
+
     Args:
         launcher: The launcher program to use (dmenu, rofi, etc.)
         terminal: The terminal program to use
-        
+
     Returns:
         str: Complete config file content
     """
-    # Add proper flags for each launcher to enable dmenu mode
-    launcher_cmd = {
-        "dmenu": "dmenu",
-        "rofi": "rofi -dmenu",
-        "bemenu": "bemenu",
-        "wofi": "wofi --dmenu",
-        "fuzzel": "fuzzel --dmenu --log-level none"
-    }.get(launcher, launcher)  # Default to just the launcher name if not in our list
     return f"""[dmenu]
-dmenu_command = {launcher_cmd}
+dmenu_command = {launcher}
 active_chars = ==
 highlight = False
 highlight_fg = None
@@ -274,25 +264,28 @@ if first_run:
 CONF.read(config_path)
 
 
-def cli_args():
-    """Allow command line arguments override config settings,
-    except for -p/--prompt which should be controlled by the script.
+def cli_args(args):
+    """Remove certain flags from a list of arguments
 
-    Returns: List of CLI arguments with -p/--prompt removed if present
+    Arguments: List of strings
+
+    Returns: List of CLI arguments with `prompt_*args` removed if present
     """
-    args = sys.argv[1:]
-
     # List of prompt flags to remove (both short and long forms)
-    prompt_flags = ["-p", "--prompt"]
+    prompts_args = ["-p", "--prompt"]
+    prompts_no_args = ["-d", "-dmenu", "--dmenu"]
 
     i = 0
     while i < len(args):
-        # Check for standalone prompt flags
-        if args[i] in prompt_flags:
+        # Check for arguments with values
+        if args[i] in prompts_args:
             del args[i]
-            if i < len(args):  # Make sure we don't go out of bounds
+            if i < len(args):  # Delete arg value, but not beyond list length
                 del args[i]
-        # Check for combined format (-ptext)
+        # Check for standalone args
+        elif args[i] in prompts_no_args:
+            del args[i]
+        # Check for -p with no space before arguments (-ptext)
         elif args[i].startswith("-p") and len(args[i]) > 2:
             del args[i]
         # For all other flags, keep them to override config
@@ -341,12 +334,13 @@ def dmenu_cmd(prompt, active_lines=None):
         "dmenu": ["-p", str(prompt)],
         "rofi": ["-dmenu", "-p", str(prompt)],
         "bemenu": ["-p", str(prompt)],
-        "wofi": ["-p", str(prompt)],
-        "fuzzel": ["-p", str(prompt), "--log-level", "none"],
+        "wofi": ["--dmenu", "-p", str(prompt)],
+        "fuzzel": ["--dmenu", "-p", str(prompt)],
     }
     command = shlex.split(CONF.get("dmenu", "dmenu_command", fallback="dmenu"))
+    command = cli_args(command)  # Strip unnecessary extra prompt/dmenu flags
     cmd_base = basename(command[0])
-    command.extend(cli_args())
+    command.extend(cli_args(sys.argv[1:]))
     command.extend(commands.get(cmd_base, []))
     # Highlighting
     highlight = CONF.getboolean("dmenu", "highlight", fallback=False)
