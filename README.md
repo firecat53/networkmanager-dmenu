@@ -152,6 +152,11 @@ nmcli device wifi show-password
   NetworkManager wifi sharing doesn't work for you.  Unfortunately, these
   hotspots cannot be managed with networkmanager_dmenu.
 
+* **NOTE** Running under [UWSM][12] requires some [extra configuration][13].
+    + Assigning to keyboard shortcut: `uwsm app -- networkmanager_dmenu`
+    + If launching by, for example, clicking a Waybar icon, Waybar must be the
+      version that works with UWSM and be started as a `systemd --user` service.
+ 
 ## MIT License
 
 [1]: https://davedavenport.github.io/rofi/ "Rofi"
@@ -165,3 +170,5 @@ nmcli device wifi show-password
 [9]: https://search.nixos.org/packages? "Nix Packages"
 [10]: https://github.com/lakinduakash/linux-wifi-hotspot
 [11]: https://github.com/abenz1267/walker
+[12]: https://github.com/Vladimir-csp/uwsm "UWSM"
+[13]: https://github.com/Vladimir-csp/uwsm#5-launchers "Launchers under UWSM"
