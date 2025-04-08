@@ -96,7 +96,16 @@ def is_installed(cmd):
 
 
 # List of supported launchers
-SUPPORTED_LAUNCHERS = ["bemenu", "dmenu", "fuzzel", "rofi", "walker", "wofi"]
+SUPPORTED_LAUNCHERS = [
+    "bemenu",
+    "dmenu",
+    "fuzzel",
+    "rofi",
+    "tofi",
+    "walker",
+    "wmenu",
+    "wofi",
+]
 # List of common terminals
 COMMON_TERMINALS = [
     "alacritty",
@@ -322,11 +331,10 @@ def dmenu_pass(command, color):
 def dmenu_cmd(prompt, active_lines=None):
     """Parse config.ini for menu options
 
-    Args: args - num_lines: number of lines to display
-                 prompt: prompt to show
+    Args: args - prompt: prompt to show
                  active_lines: list of line numbers to tag as active
     Returns: command invocation (as a list of strings) for example
-                ["dmenu", "-l", "<num_lines>", "-p", "<prompt>", "-i"]
+                ["dmenu", "-p", "<prompt>", "-i"]
 
     """
     # Create command string
@@ -335,7 +343,10 @@ def dmenu_cmd(prompt, active_lines=None):
         "dmenu": ["-p", str(prompt)],
         "fuzzel": ["--dmenu", "-p", str(prompt)],
         "rofi": ["-dmenu", "-p", str(prompt)],
+        "tofi": ["--require-match=false",
+                 f"--prompt-text={str(prompt)}: "],
         "walker": ["-d", "-p", str(prompt), "-k", "-n", "-f"],
+        "wmenu": ["-p", str(prompt)],
         "wofi": ["--dmenu", "-p", str(prompt)],
     }
     command = shlex.split(CONF.get("dmenu", "dmenu_command", fallback="dmenu"))
@@ -364,7 +375,9 @@ def dmenu_cmd(prompt, active_lines=None):
             "dmenu": dmenu_pass(cmd_base, obscure_color),
             "fuzzel": ["--password"],
             "rofi": ["-password"],
-            "walker": ['-y', '-n'],
+            "tofi": ["--hide-input=true", "--hidden-character=*"],
+            "walker": ["-y", "-n"],
+            "wmenu": dmenu_pass(cmd_base, obscure_color),
             "wofi": ["-P"],
         }
         command.extend(pass_prompts.get(cmd_base, []))

@@ -1,7 +1,15 @@
 # Networkmanager-dmenu
 
-Manage NetworkManager connections with dmenu, [Rofi][1], [Bemenu][2],
-[Wofi][7], [fuzzel][8] or [walker][11] instead of nm-applet
+Manage NetworkManager connections with supported launchers instead of nm-applet.
+
+* [Bemenu][2]
+* [Dmenu][16]
+* [Fuzzel][8]
+* [Rofi][1]
+* [Tofi][14]
+* [Walker][11]
+* [Wmenu][15]
+* [Wofi][7]
 
 **NOTE**
 
@@ -172,3 +180,6 @@ nmcli device wifi show-password
 [11]: https://github.com/abenz1267/walker
 [12]: https://github.com/Vladimir-csp/uwsm "UWSM"
 [13]: https://github.com/Vladimir-csp/uwsm#5-launchers "Launchers under UWSM"
+[14]: https://github.com/philj56/tofi "Tofi"
+[15]: https://codeberg.org/adnano/wmenu "Wmenu"
+[16]: https://tools.suckless.org/dmenu/ "Dmenu"
