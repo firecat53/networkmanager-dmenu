@@ -11,10 +11,6 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 * [Wmenu][15]
 * [Wofi][7]
 
-**NOTE**
-
-> PR #124 changes `rofi_highlight` to `highlight` in `config.ini`.
-
 ## Features
 
 - Connect to existing NetworkManager wifi or wired connections
@@ -34,11 +30,10 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 
 ## Installation
 
-- Copy script somewhere into $PATH OR
-
-  - Archlinux: [AUR package][3] OR
-  - Gentoo: [Woomy Overlay][4]
-  - Nix: [Nix Packages][9]
+- Copy script somewhere into $PATH
+- Archlinux: [AUR package][3] OR
+- Gentoo: [Woomy Overlay][4]
+- Nix: [Nix Packages][9]
 
 - Run `./networkmanager_dmenu` in your terminal to generate the config file. 
  
@@ -122,7 +117,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 |                      | `list_saved`       | `False`                |                                                  |
 |                      | `pinentry`         | None                   |                                                  |
 |                      | `active_chars`     | ==                     | Prefix of active connection                      |
-|                      | `highlight`        | `True`                | Only applicable to rofi / wofi                   |
+|                      | `highlight`        | `True`                 | Only applicable to rofi / wofi                   |
 |                      | `highlight_fg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bold`   | `True`                 | Only applicable to wofi                          |
