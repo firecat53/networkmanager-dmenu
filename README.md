@@ -31,7 +31,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 ## Installation
 
 - Copy script somewhere into $PATH
-- Archlinux: [AUR package][3] OR
+- Archlinux: [AUR package][3]
 - Gentoo: [Woomy Overlay][4]
 - Nix: [Nix Packages][9]
 
