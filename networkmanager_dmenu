@@ -1072,47 +1072,36 @@ def toggle_bluetooth(enable):
         # Times out in 2 seconds, otherwise bluetoothctl will hang if bluetooth
         # service isn't running.
         try:
-            res = subprocess.run(
+            _ = subprocess.run(
                 ["bluetoothctl", "power", "on" if enable is True else "off"],
                 timeout=2,
                 capture_output=True,
             )
         except subprocess.TimeoutExpired:
             pass
-        try:
-            res = subprocess.run(
-                ["bluetoothctl", "show"],
-                timeout=2,
-                capture_output=True,
-                text=True,
-            )
-            if "Powered: yes" in res.stdout:
-                notify("Bluetooth enabled")
-                return
-        except subprocess.TimeoutExpired:
-            pass
-    # Now try using rfkill
-    type_bluetooth = 2
-    op_change_all = 3
-    idx = 0
-    soft_state = 0 if enable else 1
-    hard_state = 0
+    if bluetooth_get_enabled() != enable:
+        # Now try using rfkill
+        type_bluetooth = 2
+        op_change_all = 3
+        idx = 0
+        soft_state = 0 if enable else 1
+        hard_state = 0
 
-    data = struct.pack(
-        "IBBBB", idx, type_bluetooth, op_change_all, soft_state, hard_state
-    )
-
-    try:
-        with open("/dev/rfkill", "r+b", buffering=0) as rff:
-            rff.write(data)
-    except PermissionError:
-        notify(
-            "Lacking permission to write to /dev/rfkill.",
-            "Check README for configuration options.",
-            urgency="critical",
+        data = struct.pack(
+            "IBBBB", idx, type_bluetooth, op_change_all, soft_state, hard_state
         )
-    else:
-        notify(f"Bluetooth {'enabled' if enable else 'disabled'}")
+
+        try:
+            with open("/dev/rfkill", "r+b", buffering=0) as rff:
+                rff.write(data)
+        except PermissionError:
+            notify(
+                "Lacking permission to write to /dev/rfkill.",
+                "Check README for configuration options.",
+                urgency="critical",
+            )
+    sleep(5)  # Needs a delay to ensure state has changed
+    notify(f"Bluetooth {'enabled' if bluetooth_get_enabled() else 'disabled'}")
 
 
 def launch_connection_editor():
