@@ -17,7 +17,7 @@ highlight_bold = True
 # Remove extra spacing from display
 compact = False
 # Pinentry command e.g. `pinentry-gtk`
-pinentry = None
+pinentry =
 # String of 4 unicode characters representing 1-4 bars strength
 wifi_chars = ▂▄▆█
 # Characters representing signal strength as an icon
