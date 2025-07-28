@@ -41,7 +41,24 @@ from gi.repository import GLib, NM  # noqa pylint: disable=wrong-import-position
 ENV = os.environ.copy()
 ENC = locale.getpreferredencoding()
 
-CONF = configparser.ConfigParser()
+
+class SafeConfigParser(configparser.ConfigParser):
+    """Safely handle interpolation errors."""
+
+    def get(self, section, option, *args, **kwargs):
+        try:
+            return super().get(section, option, *args, **kwargs)
+        except configparser.InterpolationError:
+            print(
+                f"Warning: Interpolation error in [{section}] {option}. "
+                f"Use %% instead of % for literal percent signs.",
+                file=sys.stderr,
+            )
+            # Get the raw value without interpolation
+            return super().get(section, option, raw=True, *args, **kwargs)
+
+
+CONF = SafeConfigParser()
 
 # Default config paths
 default_config_dir = expanduser("~/.config/networkmanager-dmenu")
@@ -1352,9 +1369,7 @@ def create_ap_list(adapter, active_connections):
         active_ap_name = None
         active_ap_con = []
     if len(active_ap_con) > 1:
-        raise ValueError(
-            "Multiple connection profiles match" " the wireless AP"
-        )
+        raise ValueError("Multiple connection profiles match the wireless AP")
     active_ap_con = active_ap_con[0] if active_ap_con else None
     for nm_ap in aps_all:
         ap_name = ssid_to_utf8(nm_ap)

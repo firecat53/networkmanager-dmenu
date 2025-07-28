@@ -77,6 +77,8 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 - All theming is done through the respective menu programs. Set `dmenu_command`
   with the desired options, including things like `-i` for case insensitivity.
   See config.ini.example for examples.
+    * Note: if a literal `%` is used in the config, it must be entered as `%%`.
+      See config.ini.example.
 - If using dmenu for passphrase entry (pinentry not set), dmenu options in the
   `[dmenu_passphrase]` section of config.ini will set the normal foreground and
   background colors to be the same to obscure the passphrase. The [Suckless
