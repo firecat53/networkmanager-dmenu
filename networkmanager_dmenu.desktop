@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Settings;Network;
-Name=NetworkManager Dmenu 
+Name=NetworkManager Dmenu
 GenericName=Networkmanager Settings
 Exec=networkmanager_dmenu
 Icon=nm-device-wireless
