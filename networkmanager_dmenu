@@ -393,7 +393,7 @@ def dmenu_cmd(prompt, active_lines=None):
             "rofi": ["-password"],
             "tofi": ["--hide-input=true", "--hidden-character=*"],
             "walker": ["-y", "-n"],
-            "wmenu": dmenu_pass(cmd_base, obscure_color),
+            "wmenu": ["-P"],
             "wofi": ["-P"],
         }
         command.extend(pass_prompts.get(cmd_base, []))
