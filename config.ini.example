@@ -61,3 +61,5 @@ gui = nm-connection-editor
 [nmdm]
 # seconds to wait after a wifi rescan before redisplaying the results
 rescan_delay = 5
+# Allows to disable notifications altogether
+show_notifications = True
