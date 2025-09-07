@@ -1385,6 +1385,7 @@ def create_ap_list(adapter, active_connections):
 def notify(message, details=None, urgency="low"):
     """Use notify-send if available for notifications"""
     delay = CONF.getint("nmdm", "rescan_delay", fallback=5)
+    show_notifications = CONF.getboolean("nmdm", "show_notifications", fallback=True)
     args = [
         "-u",
         urgency,
@@ -1396,7 +1397,7 @@ def notify(message, details=None, urgency="low"):
     ]
     if details is not None:
         args.append(details)
-    if is_installed("notify-send"):
+    if is_installed("notify-send") and show_notifications:
         subprocess.run(["notify-send"] + args, check=False)
 
 
