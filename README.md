@@ -31,7 +31,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 ## Installation
 
 - Copy script somewhere into $PATH
-- Archlinux: [AUR package][3]
+- Archlinux: [Arch Packages][3]
 - Gentoo: [Woomy Overlay][4]
 - Nix: [Nix Packages][9]
 
@@ -166,7 +166,7 @@ nmcli device wifi show-password
 
 [1]: https://davedavenport.github.io/rofi/ "Rofi"
 [2]: https://github.com/Cloudef/bemenu "Bemenu" 
-[3]: https://aur.archlinux.org/packages/networkmanager-dmenu-git/ "AUR Package" 
+[3]: https://archlinux.org/packages/extra/any/networkmanager-dmenu/ "Arch Packages"
 [4]: https://github.com/Woomy4680-exe/Woomy-overlay "Woomy Overlay" 
 [5]: https://wiki.archlinux.org/index.php/NetworkManager#Set_up_PolicyKit_permissions "PolicyKit permissions"
 [6]: https://tools.suckless.org/dmenu/patches/password/ "Suckless password patch" 
