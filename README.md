@@ -13,18 +13,18 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 
 ## Features
 
-- Connect to existing NetworkManager wifi or wired connections
-- Connect to new wifi connections. Requests passphrase if required
+- Connect to existing NetworkManager WiFi or wired connections
+- Connect to new WiFi connections. Requests passphrase if required
 - Connect to _existing_ VPN, Wireguard, GSM/WWAN and Bluetooth connections
-- Enable/Disable wifi, WWAN, bluetooth and networking
+- Enable/Disable WiFi, WWAN, bluetooth and networking
 - Launch nm-connection-editor GUI
-- Support for multiple wifi adapters
+- Support for multiple WiFi adapters
 - Optional Pinentry support for secure passphrase entry
 - Delete existing connections
-- Rescan wifi networks
+- Rescan WiFi networks
 - Uses notify-send for notifications if available
 - Start/stop/delete existing NetworkManager Hotspots
-- Show password/QR code for current Wifi network
+- Show password/QR code for current WiFi network
 
 ![Screencast](nmdm.gif)
 
@@ -154,7 +154,7 @@ nmcli device wifi show-password
 ```
 
   This may not work for your setup.  [Linux-wifi-hotspot][10] is an option if straight
-  NetworkManager wifi sharing doesn't work for you.  Unfortunately, these
+  NetworkManager WiFi sharing doesn't work for you.  Unfortunately, these
   hotspots cannot be managed with networkmanager_dmenu.
 
 * **NOTE** Running under [UWSM][12] requires some [extra configuration][13].

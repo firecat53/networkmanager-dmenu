@@ -401,7 +401,7 @@ def dmenu_cmd(prompt, active_lines=None):
 
 
 def choose_adapter(client):
-    """If there is more than one wifi adapter installed, ask which one to use"""
+    """If there is more than one WiFi adapter installed, ask which one to use"""
     devices = client.get_devices()
     devices = [i for i in devices if i.get_device_type() == NM.DeviceType.WIFI]
     if not devices:
@@ -471,7 +471,7 @@ def create_other_actions(client):
     bluetooth_action = "Disable" if bluetooth_enabled else "Enable"
 
     actions = [
-        Action(f"{wifi_action} Wifi", toggle_wifi, not wifi_enabled),
+        Action(f"{wifi_action} WiFi", toggle_wifi, not wifi_enabled),
         Action(
             f"{networking_action} Networking",
             toggle_networking,
@@ -491,14 +491,14 @@ def create_other_actions(client):
         Action("Delete a Connection", delete_connection),
     ]
     if wifi_enabled:
-        actions.append(Action("Rescan Wifi Networks", rescan_wifi))
+        actions.append(Action("Rescan WiFi Networks", rescan_wifi))
         actions.append(Action("Show WiFi password", show_wifi_password))
     return actions
 
 
 def rescan_wifi():
     """
-    Rescan Wifi Access Points
+    Rescan WiFi Access Points
     """
     delay = CONF.getint("nmdm", "rescan_delay", fallback=5)
     for dev in CLIENT.get_devices():
@@ -507,11 +507,11 @@ def rescan_wifi():
                 dev.request_scan_async(None, rescan_cb, None)
                 LOOP.run()
                 sleep(delay)
-                notify("Wifi scan complete")
+                notify("WiFi scan complete")
                 main()
             except gi.repository.GLib.Error as err:
                 # Too frequent rescan error
-                notify("Wifi rescan failed", urgency="critical")
+                notify("WiFi rescan failed", urgency="critical")
                 if not err.code == 6:  # pylint: disable=no-member
                     raise err
 
@@ -519,9 +519,9 @@ def rescan_wifi():
 def rescan_cb(dev, res, _):
     """Callback for rescan_wifi. Just for notifications"""
     if dev.request_scan_finish(res) is True:
-        notify("Wifi scan running...")
+        notify("WiFi scan running...")
     else:
-        notify("Wifi scan failed", urgency="critical")
+        notify("WiFi scan failed", urgency="critical")
     LOOP.quit()
 
 
@@ -1024,7 +1024,7 @@ def toggle_networking(enable):
 
 
 def toggle_wifi(enable):
-    """Enable/disable Wifi
+    """Enable/disable WiFi
 
     Args: enable - boolean
 
@@ -1044,7 +1044,7 @@ def toggle_wifi(enable):
     except AttributeError:
         # Workaround for older versions of python-gobject
         CLIENT.wireless_set_enabled(enable)
-    notify(f"Wifi {'enabled' if enable is True else 'disabled'}")
+    notify(f"WiFi {'enabled' if enable is True else 'disabled'}")
 
 
 def toggle_wwan(enable):
@@ -1474,7 +1474,7 @@ def run():  # pylint: disable=too-many-locals
 
 
 def main():
-    """Main. Enables script to be re-run after a wifi rescan"""
+    """Main. Enables script to be re-run after a WiFi rescan"""
     global CLIENT, CONNS, LOOP
     CLIENT = NM.Client.new(None)
     LOOP = GLib.MainLoop()
