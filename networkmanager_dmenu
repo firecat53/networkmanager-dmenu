@@ -321,6 +321,35 @@ def cli_args(args):
     return args
 
 
+def run_dmenu(command, input_text=None):
+    """Run a dmenu command and handle errors properly.
+
+    Args:
+        command: list of command arguments
+        input_text: optional string to pass as stdin
+
+    Returns:
+        subprocess.CompletedProcess result
+
+    Raises:
+        SystemExit: if the dmenu command fails with an error
+    """
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        check=False,
+        input=input_text,
+        encoding=ENC,
+        env=ENV,
+    )
+    if result.returncode != 0 and result.stderr:
+        error_msg = f"dmenu command failed: {result.stderr.strip()}"
+        print(error_msg, file=sys.stderr)
+        notify(error_msg, urgency="critical")
+        sys.exit(result.returncode)
+    return result
+
+
 def dmenu_pass(command, color):
     """Check if dmenu passphrase patch is applied and return the correct command
     line arg list
@@ -409,14 +438,7 @@ def choose_adapter(client):
     if len(devices) == 1:
         return devices[0]
     device_names = "\n".join([d.get_iface() for d in devices])
-    sel = subprocess.run(
-        dmenu_cmd("CHOOSE ADAPTER:"),
-        capture_output=True,
-        check=False,
-        env=ENV,
-        input=device_names,
-        encoding=ENC,
-    ).stdout
+    sel = run_dmenu(dmenu_cmd("CHOOSE ADAPTER:"), device_names).stdout
     if not sel.strip():
         sys.exit()
     devices = [i for i in devices if i.get_iface() == sel.strip()]
@@ -960,14 +982,7 @@ def get_selection(all_actions):
 
     prompt = CONF.get("dmenu", "prompt", fallback="Networks")
     command = dmenu_cmd(f"{prompt} ", active_lines=active_lines)
-    sel = subprocess.run(
-        command,
-        capture_output=True,
-        check=False,
-        input="\n".join(inp),
-        encoding=ENC,
-        env=ENV,
-    ).stdout
+    sel = run_dmenu(command, "\n".join(inp)).stdout
 
     if not sel.rstrip():
         sys.exit()
@@ -1181,13 +1196,7 @@ def get_passphrase():
             if res and res[0].startswith("D "):
                 pin = res[0].split("D ")[1]
         return pin
-    return subprocess.run(
-        dmenu_cmd("Passphrase"),
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        check=False,
-        encoding=ENC,
-    ).stdout
+    return run_dmenu(dmenu_cmd("Passphrase"), "").stdout
 
 
 def delete_connection():
@@ -1197,14 +1206,7 @@ def delete_connection():
         for i in CONNS
     ]
     conn_names = "\n".join([str(i) for i in conn_acts])
-    sel = subprocess.run(
-        dmenu_cmd("CHOOSE CONNECTION TO DELETE:"),
-        capture_output=True,
-        check=False,
-        input=conn_names,
-        encoding=ENC,
-        env=ENV,
-    ).stdout
+    sel = run_dmenu(dmenu_cmd("CHOOSE CONNECTION TO DELETE:"), conn_names).stdout
     if not sel.strip():
         sys.exit()
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
