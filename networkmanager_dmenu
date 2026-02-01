@@ -390,7 +390,7 @@ def dmenu_cmd(prompt, active_lines=None):
         "fuzzel": ["--dmenu", "--placeholder", str(prompt)],
         "rofi": ["-dmenu", "-p", str(prompt)],
         "tofi": ["--require-match=false", f"--prompt-text={str(prompt)}: "],
-        "walker": ["-d", "-p", str(prompt), "-k", "-n", "-f"],
+        "walker": ["-d", "-p", str(prompt), "-k"],
         "wmenu": ["-p", str(prompt)],
         "wofi": ["--dmenu", "-p", str(prompt)],
     }
@@ -421,7 +421,7 @@ def dmenu_cmd(prompt, active_lines=None):
             "fuzzel": ["--password"],
             "rofi": ["-password"],
             "tofi": ["--hide-input=true", "--hidden-character=*"],
-            "walker": ["-y", "-n"],
+            "walker": ["-y", "-I"],
             "wmenu": ["-P"],
             "wofi": ["-P"],
         }
