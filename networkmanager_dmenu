@@ -122,6 +122,7 @@ SUPPORTED_LAUNCHERS = [
     "walker",
     "wmenu",
     "wofi",
+    "yofi",
 ]
 # List of common terminals
 COMMON_TERMINALS = [
@@ -393,6 +394,7 @@ def dmenu_cmd(prompt, active_lines=None):
         "walker": ["-d", "-p", str(prompt), "-k", "-n", "-f"],
         "wmenu": ["-p", str(prompt)],
         "wofi": ["--dmenu", "-p", str(prompt)],
+        "yofi": ["--prompt", str(prompt)],
     }
     command = shlex.split(CONF.get("dmenu", "dmenu_command", fallback="dmenu"))
     command = cli_args(command)  # Strip unnecessary extra prompt/dmenu flags
@@ -424,8 +426,12 @@ def dmenu_cmd(prompt, active_lines=None):
             "walker": ["-y", "-n"],
             "wmenu": ["-P"],
             "wofi": ["-P"],
+            "yofi": ["--password"],
         }
         command.extend(pass_prompts.get(cmd_base, []))
+
+    if cmd_base == "yofi":
+        command.extend(["dialog"])
     return command
 
 
