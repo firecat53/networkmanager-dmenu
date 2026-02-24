@@ -10,6 +10,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 * [Walker][11]
 * [Wmenu][15]
 * [Wofi][7]
+* [Yofi][17]
 
 ## Features
 
@@ -41,7 +42,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 
 1. Python 3.7+
 2. NetworkManager
-3. Dmenu (X), Rofi (X or XWayland), Wofi (Wayland) or Bemenu (X or Wayland)
+3. Dmenu (X), Rofi (X or XWayland), Wofi (Wayland), Yofi (Wayland) or Bemenu (X or Wayland)
 4. Python gobject (PyGObject, python-gobject, etc.)
 5. (Debian/Ubuntu based distros) libnm0 (libnm-util-dev on older distributions)
    and gir1.2-nm-1.0 (you have to explicitly install the latter on Debian Sid)
@@ -180,3 +181,4 @@ nmcli device wifi show-password
 [14]: https://github.com/philj56/tofi "Tofi"
 [15]: https://codeberg.org/adnano/wmenu "Wmenu"
 [16]: https://tools.suckless.org/dmenu/ "Dmenu"
+[17]: https://github.com/l4l/yofi "Yofi"
