@@ -472,7 +472,8 @@ def bluetooth_get_enabled():
         # service isn't running.
         try:
             res = subprocess.run(
-                ["bluetoothctl", "show"],
+                ["bluetoothctl <<< show"],
+                shell=True,
                 timeout=2,
                 capture_output=True,
                 text=True,
