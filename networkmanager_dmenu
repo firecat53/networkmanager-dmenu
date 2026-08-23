@@ -1087,16 +1087,17 @@ def get_selection(all_actions):
             or get_wofi_highlight_markup(i) == sel.strip()
         ]
     else:
+        # Some launchers trim trailing whitespace from the line they return,
+        # so compare on the stripped text rather than the padded line
+        sel_text = sel.rstrip("\n")
+        sel_active = sel_text.startswith(active_chars)
+        if sel_active:
+            sel_text = sel_text[len(active_chars):]
+        sel_text = sel_text.strip()
         action = [
             i
             for i in all_actions
-            if (
-                (str(i).strip() == str(sel.strip()) and not i.is_active)
-                or (
-                    active_chars + " " + str(i) == str(sel.rstrip("\n"))
-                    and i.is_active
-                )
-            )
+            if str(i).strip() == sel_text and i.is_active == sel_active
         ]
     if len(action) != 1:
         raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
