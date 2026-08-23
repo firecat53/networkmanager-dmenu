@@ -1216,11 +1216,12 @@ def launch_connection_editor():
     gui_if_available = CONF.getboolean(
         "editor", "gui_if_available", fallback=True
     )
-    gui = CONF.get("editor", "gui", fallback="nm-connection-editor")
-    if gui_if_available is True:
-        if is_installed(gui):
-            subprocess.run(gui, check=False)
-            return
+    gui = shlex.split(
+        CONF.get("editor", "gui", fallback="nm-connection-editor")
+    )
+    if gui_if_available is True and gui and is_installed(gui[0]):
+        subprocess.run(gui, check=False)
+        return
     if is_installed("nmtui"):
         subprocess.run(terminal + ["-e", "nmtui"], check=False)
         return
@@ -1259,7 +1260,7 @@ def get_passphrase():
         prompt = CONF.get("pinentry", "prompt", fallback="Password: ")
         pin = ""
         out = subprocess.run(
-            pinentry,
+            shlex.split(pinentry),
             capture_output=True,
             check=False,
             encoding=ENC,
