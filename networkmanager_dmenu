@@ -765,7 +765,12 @@ def strength_bars(signal_strength):
     bars = NM.utils_wifi_strength_bars(signal_strength)
     wifi_chars = CONF.get("dmenu", "wifi_chars", fallback="")
     if wifi_chars:
-        bars = "".join([wifi_chars[i] for i, j in enumerate(bars) if j == "*"])
+        # `utils_wifi_strength_bars` always returns four slots, so clamp the
+        # index rather than raising if fewer characters were configured
+        last = len(wifi_chars) - 1
+        bars = "".join(
+            [wifi_chars[min(i, last)] for i, j in enumerate(bars) if j == "*"]
+        )
     return " " * (len(wifi_chars) - len(bars)) + bars
 
 
