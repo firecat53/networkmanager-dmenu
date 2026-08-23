@@ -142,7 +142,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 
 ## Usage
 
-`networkmanager_dmenu [-h] [--config CONFIG_PATH] <menu args>`
+`networkmanager_dmenu [-h] [-V] [--config CONFIG_PATH] <menu args>`
 
 - Run script or bind to keystroke combination
 - If desired, menu options can be passed on the command line instead of or in

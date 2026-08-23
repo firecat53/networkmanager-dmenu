@@ -54,9 +54,15 @@
           commonPackages,
         }:
         {
-          default = pkgs.stdenv.mkDerivation {
-            name = "networkmanager_dmenu";
+          default = pkgs.stdenv.mkDerivation rec {
             pname = "networkmanager_dmenu";
+            # Single source of truth: __version__ in the script itself
+            version = builtins.head (
+              builtins.match ".*\n__version__ = \"([^\"]+)\".*" (
+                builtins.readFile ./networkmanager_dmenu
+              )
+            );
+            name = "${pname}-${version}";
             dontBuild = true;
             src = ./.;
             buildInputs = commonPackages;
