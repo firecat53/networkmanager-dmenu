@@ -292,28 +292,32 @@ CONF.read(config_path)
 
 
 def cli_args(args):
-    """Remove certain flags from a list of arguments
+    """Remove prompt setting flags from a list of arguments
+
+    `dmenu_cmd` adds the prompt flag appropriate to the launcher, so any prompt
+    flag coming from `dmenu_command` or the command line has to be dropped
+    first to avoid passing it twice.
 
     Arguments: List of strings
 
-    Returns: List of CLI arguments with `prompt_*args` removed if present
+    Returns: List of CLI arguments with prompt flags removed if present
     """
-    # List of prompt flags to remove (both short and long forms)
-    prompts_args = ["-p", "--prompt"]
+    # Prompt flags taking a separate value.
+    prompts_args = ["-p", "--prompt", "--prompt-text", "--placeholder"]
     prompts_no_args = ["-d", "-dmenu", "--dmenu"]
 
     i = 0
     while i < len(args):
+        # Check for `--prompt=text` style arguments
+        if "=" in args[i] and args[i].split("=", 1)[0] in prompts_args:
+            del args[i]
         # Check for arguments with values
-        if args[i] in prompts_args:
+        elif args[i] in prompts_args:
             del args[i]
             if i < len(args):  # Delete arg value, but not beyond list length
                 del args[i]
         # Check for standalone args
         elif args[i] in prompts_no_args:
-            del args[i]
-        # Check for -p with no space before arguments (-ptext)
-        elif args[i].startswith("-p") and len(args[i]) > 2:
             del args[i]
         # For all other flags, keep them to override config
         else:
