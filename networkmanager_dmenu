@@ -1471,8 +1471,9 @@ def create_ap_list(adapter, active_connections):
         reverse=True,
     )
     if adapter.get_mode() == getattr(NM, "80211Mode").AP:
-        # Remove active hotspot from AP list
-        aps_all.remove(active_ap)
+        # Remove active hotspot from AP list. It is not always reported.
+        if active_ap in aps_all:
+            aps_all.remove(active_ap)
         active_ap = None
     conns_cur = [
         i
