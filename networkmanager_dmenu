@@ -739,10 +739,17 @@ def process_ap(nm_ap, is_active, adapter):
             )
             LOOP.run()
         else:
-            if ap_security(nm_ap) != "--":
-                password = get_passphrase()
-            else:
-                password = ""
+            sec = ap_security(nm_ap)
+            if "802.1X" in sec:
+                # create_wifi_profile would store the answer as a PSK, which
+                # can never authenticate against an enterprise network
+                notify(
+                    "802.1X networks are not supported",
+                    "Add the connection with the editor first",
+                    urgency="critical",
+                )
+                return
+            password = get_passphrase() if sec != "--" else ""
             set_new_connection(nm_ap, password, adapter)
 
 
