@@ -480,6 +480,9 @@ def is_running(cmd):
         subprocess.check_output(["pidof", cmd])
     except subprocess.CalledProcessError:
         return False
+    except FileNotFoundError:
+        # No pidof installed, so assume not running rather than crashing
+        return False
     else:
         return True
 
@@ -1524,6 +1527,10 @@ def run():  # pylint: disable=too-many-locals
     except subprocess.CalledProcessError:
         notify("WARNING: NetworkManager don't seems to be running")
         print("WARNING: NetworkManager don't seems to be running")
+    except FileNotFoundError:
+        # Nothing to check with. NM.Client.new would already have failed if
+        # NetworkManager were genuinely absent, so say nothing.
+        pass
     active = CLIENT.get_active_connections()
     adapter = choose_adapter(CLIENT)
     if adapter:
