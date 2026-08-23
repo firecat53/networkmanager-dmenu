@@ -59,7 +59,8 @@
             pname = "networkmanager_dmenu";
             dontBuild = true;
             src = ./.;
-            buildInputs = commonPackages ++ [ pkgs.python3Packages.wrapPython ];
+            buildInputs = commonPackages;
+            nativeBuildInputs = [ pkgs.python3Packages.wrapPython ];
             installPhase = ''
 
               mkdir -p $out/bin $out/share/applications $out/share/doc/$pname
@@ -80,6 +81,7 @@
               '';
             meta = {
               description = "Manage NetworkManager connections with dmenu/rofi/wofi instead of nm-applet";
+              mainProgram = "networkmanager_dmenu";
               homepage = "https://github.com/firecat53/networkmanager-dmenu";
               license = pkgs.lib.licenses.mit;
               maintainers = [ "firecat53" ];
