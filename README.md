@@ -120,7 +120,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 |                      | `list_saved`       | `False`                |                                                  |
 |                      | `pinentry`         | None                   |                                                  |
 |                      | `active_chars`     | ==                     | Prefix of active connection                      |
-|                      | `highlight`        | `True`                 | Only applicable to rofi / wofi                   |
+|                      | `highlight`        | `False`                | Only applicable to rofi / wofi                   |
 |                      | `highlight_fg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bg`     | None                   | Only applicable to wofi                          |
 |                      | `highlight_bold`   | `True`                 | Only applicable to wofi                          |
@@ -137,6 +137,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 |                      | `gui`              | `nm-connection-editor` |                                                  |
 |                      | `terminal`         | `xterm`                | Can include terminal arguments                   |
 | `[nmdm]`             | `rescan_delay`     | `5`                    | Adjust delay in re-opening nmdm following rescan |
+|                      | `show_notifications` | `True`               | Set to `False` to disable notify-send messages   |
 
 ## Usage
 
