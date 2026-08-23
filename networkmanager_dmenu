@@ -1313,7 +1313,9 @@ def set_new_connection(nm_ap, nm_pw, adapter):
           pw - string
 
     """
-    nm_pw = str(nm_pw).strip()
+    # Only the newline the launcher adds, leading/trailing spaces are legal
+    # characters in a WPA passphrase
+    nm_pw = str(nm_pw).rstrip("\r\n")
     profile = create_wifi_profile(nm_ap, nm_pw, adapter)
     CLIENT.add_and_activate_connection_async(
         profile, adapter, nm_ap.get_path(), None, verify_conn, profile
