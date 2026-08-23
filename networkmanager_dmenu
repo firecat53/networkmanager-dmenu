@@ -1314,6 +1314,11 @@ def delete_connection():
     action = [i for i in conn_acts if str(i) == sel.rstrip("\n")]
     if len(action) != 1:
         raise ValueError(f"Selection was ambiguous: {str(sel)}")
+    confirm = run_dmenu(
+        dmenu_cmd(f"DELETE '{sel.strip()}'?"), "No\nYes"
+    ).stdout
+    if confirm.strip() != "Yes":
+        sys.exit()
     action[0]()
     LOOP.run()
 
