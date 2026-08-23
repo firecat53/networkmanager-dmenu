@@ -689,7 +689,10 @@ def process_ap(nm_ap, is_active, adapter):
             if i.get_setting_wireless() is not None
             and conn_matches_adapter(i, adapter)
         ]
-        con = nm_ap.filter_connections(conns_cur)
+        # `filter_connections` is `connection_valid` in a loop, but its
+        # (transfer container) return trips a refcount bug in PyGObject that
+        # logs GObject criticals at interpreter shutdown
+        con = [i for i in conns_cur if nm_ap.connection_valid(i)]
         if len(con) > 1:
             raise ValueError("There are multiple connections possible")
 
@@ -1414,7 +1417,11 @@ def create_ap_list(adapter, active_connections):
         and conn_matches_adapter(i, adapter)
     ]
     try:
-        ap_conns = active_ap.filter_connections(conns_cur) if active_ap else []
+        ap_conns = (
+            [i for i in conns_cur if active_ap.connection_valid(i)]
+            if active_ap
+            else []
+        )
         active_ap_name = ssid_to_utf8(active_ap)
         active_ap_con = [
             active_conn
