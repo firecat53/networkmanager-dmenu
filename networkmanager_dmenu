@@ -1552,11 +1552,14 @@ def run():  # pylint: disable=too-many-locals
         gsm_actions = create_gsm_actions(gsms, active)
         wwan_actions = create_wwan_actions(CLIENT)
     else:
+        gsms = []
         gsm_actions = []
         wwan_actions = []
 
     list_saved = CONF.getboolean("dmenu", "list_saved", fallback=False)
-    saved_cons = [i for i in CONNS if i not in vpns + wgs + eths + blues]
+    # Anything already shown under its own heading must not appear again here
+    listed = vpns + wgs + eths + blues + vlans + gsms + hotspots
+    saved_cons = [i for i in CONNS if i not in listed]
     if list_saved:
         saved_actions = create_saved_actions(saved_cons)
     else:
