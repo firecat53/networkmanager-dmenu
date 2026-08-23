@@ -1376,7 +1376,6 @@ def verify_conn(client, result, data):
             ]
         ):
             raise GLib.Error("New connection failed verification")
-        notify(f"Added {conn.get_id()}")
     except (GLib.Error, AttributeError) as err:
         # AttributeError covers add_and_activate_connection_finish returning an
         # active connection with no connection attached
@@ -1384,7 +1383,29 @@ def verify_conn(client, result, data):
         name = display_id(conn) if conn is not None else display_id(data)
         notify(f"Connection to {name} failed: {reason}", urgency="critical")
         if conn is not None:
-            conn.delete_async(None, None, None)
+            # Keep the loop running so the delete is actually dispatched.
+            # cleanup_cb quits it once NetworkManager has removed the profile.
+            conn.delete_async(None, cleanup_cb, None)
+            return
+    else:
+        notify(f"Added {conn.get_id()}")
+    LOOP.quit()
+
+
+def cleanup_cb(conn, res, _):
+    """Callback for removing the profile left behind by a failed connection
+
+    Stays quiet unless the removal itself fails, the caller has already been
+    notified that the connection did not work.
+    """
+    try:
+        if conn.delete_finish(res) is not True:
+            notify(f"Could not remove {display_id(conn)}", urgency="critical")
+    except GLib.Error as err:
+        notify(
+            f"Could not remove {display_id(conn)}: {err.message}",
+            urgency="critical",
+        )
     finally:
         LOOP.quit()
 
