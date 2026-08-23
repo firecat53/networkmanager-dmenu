@@ -1019,7 +1019,8 @@ def get_wofi_highlight_markup(action):
     if highlight_bold:
         style += 'weight="bold" '
 
-    return f"<span {style}>" + str(action) + "</span>"
+    # SSIDs can contain `<`, `>` and `&`, which would break the markup
+    return f"<span {style}>" + GLib.markup_escape_text(str(action)) + "</span>"
 
 
 def get_selection(all_actions):
