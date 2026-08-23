@@ -286,6 +286,11 @@ if args.config_path:
         config_path = args.config_path
     else:
         # Use default if specified file doesn't exist
+        print(
+            f"Config file not found: {args.config_path}. "
+            f"Using {default_config_path}",
+            file=sys.stderr,
+        )
         config_path = default_config_path
 else:
     # Check environment variable
@@ -293,6 +298,12 @@ else:
     if env_config_path and isfile(env_config_path):
         config_path = env_config_path
     else:
+        if env_config_path:
+            print(
+                f"NM_DMENU_CONFIG file not found: {env_config_path}. "
+                f"Using {default_config_path}",
+                file=sys.stderr,
+            )
         # Fall back to default path
         config_path = default_config_path
 
