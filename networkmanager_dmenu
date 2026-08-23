@@ -152,7 +152,15 @@ def detect_installed_terminals():
 
 
 def prompt_command_line(prompt, options):
-    """Prompt the user for a selection via command line"""
+    """Prompt the user for a selection via command line
+
+    Falls back to the first option when there is nothing to prompt on, which
+    is the case on a first run started from a keybinding rather than a shell.
+    """
+    if not sys.stdin.isatty():
+        print(f"{prompt} No terminal to ask on, using {options[0]}")
+        return options[0]
+
     print(f"\n{prompt}")
     for i, option in enumerate(options, 1):
         print(f"{i}. {option}")
@@ -166,6 +174,9 @@ def prompt_command_line(prompt, options):
             print("Invalid selection. Please try again.")
         except ValueError:
             print("Please enter a number.")
+        except EOFError:
+            print(f"\nNo input available, using {options[0]}")
+            return options[0]
 
 
 def setup_initial_config():
@@ -209,7 +220,10 @@ def setup_initial_config():
 
     if not installed_terminals:
         print("No common terminals detected.")
-        custom_terminal = input("Enter the name of your terminal: ")
+        try:
+            custom_terminal = input("Enter the name of your terminal: ")
+        except EOFError:
+            custom_terminal = ""
         if custom_terminal.strip():
             chosen_terminal = custom_terminal.strip()
     elif len(installed_terminals) == 1:
