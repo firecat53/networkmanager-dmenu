@@ -494,11 +494,11 @@ def bluetooth_get_enabled():
         # service isn't running.
         try:
             res = subprocess.run(
-                ["bluetoothctl <<< show"],
-                shell=True,
+                ["bluetoothctl", "show"],
                 timeout=2,
                 capture_output=True,
                 text=True,
+                check=False,
             )
             return "Powered: yes" in res.stdout
         except subprocess.TimeoutExpired:
