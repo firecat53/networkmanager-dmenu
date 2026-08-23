@@ -21,7 +21,7 @@ The command line argument takes precedence over the environment variable.
 
 from os.path import basename, expanduser, isfile
 from shutil import which
-from time import sleep
+from time import monotonic, sleep
 import argparse
 import configparser
 import locale
@@ -1203,7 +1203,10 @@ def toggle_bluetooth(enable):
                 "Check README for configuration options.",
                 urgency="critical",
             )
-    sleep(5)  # Needs a delay to ensure state has changed
+    # The state does not change instantly, wait for it rather than guessing
+    deadline = monotonic() + 5
+    while monotonic() < deadline and bluetooth_get_enabled() != enable:
+        sleep(0.25)
     notify(f"Bluetooth {'enabled' if bluetooth_get_enabled() else 'disabled'}")
 
 
