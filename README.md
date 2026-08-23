@@ -138,6 +138,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
 |                      | `terminal`         | `xterm`                | Can include terminal arguments                   |
 | `[nmdm]`             | `rescan_delay`     | `5`                    | Adjust delay in re-opening nmdm following rescan |
 |                      | `show_notifications` | `True`               | Set to `False` to disable notify-send messages   |
+|                      | `notification_timeout` | `5`                | Seconds a notify-send message stays on screen    |
 
 ## Usage
 

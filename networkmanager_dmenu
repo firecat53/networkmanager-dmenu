@@ -1492,15 +1492,17 @@ def create_ap_list(adapter, active_connections):
 
 def notify(message, details=None, urgency="low"):
     """Use notify-send if available for notifications"""
-    delay = CONF.getint("nmdm", "rescan_delay", fallback=5)
-    show_notifications = CONF.getboolean("nmdm", "show_notifications", fallback=True)
+    timeout = CONF.getint("nmdm", "notification_timeout", fallback=5)
+    show_notifications = CONF.getboolean(
+        "nmdm", "show_notifications", fallback=True
+    )
     args = [
         "-u",
         urgency,
         "-a",
         "networkmanager-dmenu",
         "-t",
-        str(delay * 1000),
+        str(timeout * 1000),
         message,
     ]
     if details is not None:
