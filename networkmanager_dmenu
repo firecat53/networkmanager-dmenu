@@ -104,6 +104,8 @@ gui = nm-connection-editor
 
 [nmdm]
 rescan_delay = 5
+notification_timeout = 5
+show_notifications = True
 """
 
 
