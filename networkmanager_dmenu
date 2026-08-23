@@ -244,7 +244,11 @@ def setup_initial_config():
 
 # Parse command-line arguments for config flag
 def parse_args():
-    parser = argparse.ArgumentParser(description="NetworkManager dmenu")
+    # allow_abbrev=False so that launcher flags which happen to be a prefix of
+    # `--config` are passed through instead of consumed as a config path
+    parser = argparse.ArgumentParser(
+        description="NetworkManager dmenu", allow_abbrev=False
+    )
     parser.add_argument(
         "--config", dest="config_path", help="Path to configuration file"
     )
