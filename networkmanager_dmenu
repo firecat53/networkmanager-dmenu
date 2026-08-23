@@ -547,11 +547,16 @@ def rescan_wifi():
 
 def rescan_cb(dev, res, _):
     """Callback for rescan_wifi. Just for notifications"""
-    if dev.request_scan_finish(res) is True:
-        notify("WiFi scan running...")
-    else:
-        notify("WiFi scan failed", urgency="critical")
-    LOOP.quit()
+    try:
+        if dev.request_scan_finish(res) is True:
+            notify("WiFi scan running...")
+        else:
+            notify("WiFi scan failed", urgency="critical")
+    except GLib.Error as err:
+        # Rescanning too often is the common case here
+        notify(f"WiFi scan failed: {err.message}", urgency="critical")
+    finally:
+        LOOP.quit()
 
 
 def ssid_to_utf8(nm_ap):
@@ -561,6 +566,19 @@ def ssid_to_utf8(nm_ap):
         return ""
     ret = NM.utils_ssid_to_utf8(ssid.get_data())
     return ret
+
+
+def display_id(obj):
+    """Best effort display name for a connection or an access point
+
+    NM.ActiveConnection / NM.RemoteConnection have `get_id`, NM.AccessPoint
+    does not, and either can be handed to the async callbacks below.
+    """
+    if hasattr(obj, "get_id"):
+        return obj.get_id()
+    if hasattr(obj, "get_ssid"):
+        return ssid_to_utf8(obj)
+    return "connection"
 
 
 def prompt_saved(saved_cons):
@@ -688,22 +706,37 @@ def activate_cb(dev, res, data):
     """Notification if activate connection completed successfully"""
     try:
         conn = dev.activate_connection_finish(res)
-    except GLib.Error:
-        conn = None
-    if conn is not None:
-        notify(f"Activated {conn.get_id()}")
-    else:
-        notify(f"Problem activating {data.get_id()}", urgency="critical")
-    LOOP.quit()
+        if conn is not None:
+            notify(f"Activated {conn.get_id()}")
+        else:
+            notify(
+                f"Problem activating {display_id(data)}", urgency="critical"
+            )
+    except GLib.Error as err:
+        notify(
+            f"Problem activating {display_id(data)}: {err.message}",
+            urgency="critical",
+        )
+    finally:
+        LOOP.quit()
 
 
 def deactivate_cb(dev, res, data):
     """Notification if deactivate connection completed successfully"""
-    if dev.deactivate_connection_finish(res) is True:
-        notify(f"Deactivated {data.get_id()}")
-    else:
-        notify(f"Problem deactivating {data.get_id()}", urgency="critical")
-    LOOP.quit()
+    try:
+        if dev.deactivate_connection_finish(res) is True:
+            notify(f"Deactivated {display_id(data)}")
+        else:
+            notify(
+                f"Problem deactivating {display_id(data)}", urgency="critical"
+            )
+    except GLib.Error as err:
+        notify(
+            f"Problem deactivating {display_id(data)}: {err.message}",
+            urgency="critical",
+        )
+    finally:
+        LOOP.quit()
 
 
 def process_vpngsm(con, activate):
@@ -1225,11 +1258,18 @@ def delete_connection():
 
 def delete_cb(dev, res, _):
     """Notification if delete completed successfully"""
-    if dev.delete_finish(res) is True:
-        notify(f"Deleted {dev.get_id()}")
-    else:
-        notify(f"Problem deleting {dev.get_id()}", urgency="critical")
-    LOOP.quit()
+    try:
+        if dev.delete_finish(res) is True:
+            notify(f"Deleted {display_id(dev)}")
+        else:
+            notify(f"Problem deleting {display_id(dev)}", urgency="critical")
+    except GLib.Error as err:
+        notify(
+            f"Problem deleting {display_id(dev)}: {err.message}",
+            urgency="critical",
+        )
+    finally:
+        LOOP.quit()
 
 
 def set_new_connection(nm_ap, nm_pw, adapter):
@@ -1312,9 +1352,10 @@ def verify_conn(client, result, data):
     is an error.
 
     """
-    act_conn = client.add_and_activate_connection_finish(result)
-    conn = act_conn.get_connection()
+    conn = None
     try:
+        act_conn = client.add_and_activate_connection_finish(result)
+        conn = act_conn.get_connection()
         if not all(
             [
                 conn.verify(),
@@ -1323,14 +1364,16 @@ def verify_conn(client, result, data):
                 data.verify_secrets(),
             ]
         ):
-            raise GLib.Error
+            raise GLib.Error("New connection failed verification")
         notify(f"Added {conn.get_id()}")
-    except GLib.Error:
-        try:
-            notify(f"Connection to {conn.get_id()} failed", urgency="critical")
+    except (GLib.Error, AttributeError) as err:
+        # AttributeError covers add_and_activate_connection_finish returning an
+        # active connection with no connection attached
+        reason = getattr(err, "message", str(err))
+        name = display_id(conn) if conn is not None else display_id(data)
+        notify(f"Connection to {name} failed: {reason}", urgency="critical")
+        if conn is not None:
             conn.delete_async(None, None, None)
-        except UnboundLocalError:
-            pass
     finally:
         LOOP.quit()
 
