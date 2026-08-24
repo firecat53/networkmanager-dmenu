@@ -165,6 +165,16 @@ nmcli device wifi show-password
     + If launching by, for example, clicking a Waybar icon, Waybar must be the
       version that works with UWSM and be started as a `systemd --user` service.
  
+## Development
+
+The version is documented as `__version__` in the script.
+
+`nix develop` provides a shell with the needed dependencies on Nix or NixOS.
+
+`make release VERSION=x.y.z` opens `$EDITOR` prefilled with one bullet per
+commit since the last tag, creates an annotated tag, then prints the push
+command.
+
 ## MIT License
 
 [1]: https://davedavenport.github.io/rofi/ "Rofi"
