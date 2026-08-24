@@ -173,7 +173,7 @@ The version is documented as `__version__` in the script.
 
 `make release VERSION=x.y.z` opens `$EDITOR` prefilled with one bullet per
 commit since the last tag, creates an annotated tag, then prints the push
-command.
+command. Github action in place to create a release for each tag push.
 
 ## MIT License
 

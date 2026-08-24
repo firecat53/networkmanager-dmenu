@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  # Lets an existing tag be released after the fact, e.g. one pushed before
+  # this workflow existed.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to create a release for"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # checkout leaves the tag as a lightweight ref, which drops the
+      # annotation `make release` wrote. Re-fetch to restore the tag objects.
+      - name: Restore annotated tags
+        run: git fetch --force --tags
+
+      - name: Resolve the tag
+        id: tag
+        run: echo "name=${{ inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check __version__ matches the tag
+        run: |
+          git checkout -q "${{ steps.tag.outputs.name }}"
+          make check
+
+      - name: Create the release from the tag message
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.tag.outputs.name }}"
+          git for-each-ref --format='%(contents:body)' "refs/tags/$tag" \
+            | gh release create "$tag" \
+                --title "$tag" \
+                --verify-tag \
+                --notes-file -
