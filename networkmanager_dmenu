@@ -19,7 +19,7 @@ NM_DMENU_CONFIG=/path/to/config.ini   (environment variable)
 The command line argument takes precedence over the environment variable.
 """
 
-__version__ = "2.7.0"
+__version__ = "2.7.1"
 
 from os.path import basename, expanduser, isfile
 from shutil import which
