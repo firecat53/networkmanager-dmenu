@@ -810,6 +810,7 @@ def process_ap(nm_ap, is_active, adapter):
                 nm_ap,
             )
             LOOP.run()
+            wait_for_device_activated(adapter)
         else:
             sec = ap_security(nm_ap)
             if "802.1X" in sec:
@@ -846,6 +847,51 @@ def activate_cb(dev, res, data):
         )
     finally:
         LOOP.quit()
+
+
+def wait_for_device_activated(device, timeout=30):
+    """Block until the device has finished activating
+
+    NetworkManager ties the activation of a connection's secondaries (the VPN
+    profiles listed in `connection.secondaries`) to the D-Bus client that
+    asked for it, so returning as soon as the activation request is accepted
+    leaves the VPN to be torn down again the moment nmdm exits. Stay on the
+    bus until the device reports ACTIVATED, the state it only reaches once
+    its secondaries are up.
+
+    Args: device - NM.Device
+          timeout - seconds to wait before giving up
+
+    """
+    if device.get_state() == NM.DeviceState.ACTIVATED:
+        return
+
+    timed_out = False
+
+    def on_state_changed(dev, new_state, old_state, reason):
+        if new_state == NM.DeviceState.ACTIVATED:
+            LOOP.quit()
+
+    def on_timeout():
+        nonlocal timed_out
+        timed_out = True
+        LOOP.quit()
+        return GLib.SOURCE_REMOVE
+
+    handler_id = device.connect("state-changed", on_state_changed)
+    timeout_id = GLib.timeout_add_seconds(timeout, on_timeout)
+    LOOP.run()
+    if not timed_out:
+        GLib.source_remove(timeout_id)
+    # NM.Device shadows GObject's `disconnect`, and its version disconnects
+    # the device from the network instead of the signal handler
+    device.handler_disconnect(handler_id)
+    if timed_out:
+        notify(
+            f"{device.get_iface()} did not finish activating",
+            f"Gave up waiting after {timeout} seconds",
+            urgency="critical",
+        )
 
 
 def deactivate_cb(dev, res, data):
