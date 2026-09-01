@@ -810,6 +810,7 @@ def process_ap(nm_ap, is_active, adapter):
                 nm_ap,
             )
             LOOP.run()
+            wait_for_device_activated(adapter)
         else:
             sec = ap_security(nm_ap)
             if "802.1X" in sec:
@@ -1706,6 +1707,25 @@ def run():  # pylint: disable=too-many-locals
     sel = get_selection(actions)
     sel()
 
+def wait_for_device_activated(device, timeout=30):
+    """Wait until the device actually reaches ACTIVATED state.
+
+    This mirrors the blocking behavior of `nmcli connection up`.
+    It gives NetworkManager time to properly tear down any previous
+    secondary connections (VPN, WireGuard, etc.) before the script exits.
+    """
+    if device.get_state() == NM.DeviceState.ACTIVATED:
+        return
+
+    def on_state_changed(dev, new_state, old_state, reason):
+        if new_state == NM.DeviceState.ACTIVATED:
+            LOOP.quit()
+
+    handler_id = device.connect("state-changed", on_state_changed)
+    timeout_id = GLib.timeout_add_seconds(timeout, LOOP.quit)
+    LOOP.run()
+    GLib.source_remove(timeout_id)
+    device.disconnect(handler_id)
 
 def main():
     """Main. Enables script to be re-run after a WiFi rescan"""
