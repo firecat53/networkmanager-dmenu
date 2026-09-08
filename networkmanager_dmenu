@@ -764,11 +764,15 @@ def process_ap(nm_ap, is_active, adapter):
 
 
 def activate_cb(dev, res, data):
-    """Notification if activate connection completed successfully"""
+    """Notification that NetworkManager accepted the activation request
+
+    Finishing here only means NM took the request, the activation itself
+    settles long after nmdm has exited, so do not claim it succeeded.
+    """
     try:
         conn = dev.activate_connection_finish(res)
         if conn is not None:
-            notify(f"Activated {conn.get_id()}")
+            notify(f"Connecting to {conn.get_id()}")
         else:
             notify(
                 f"Problem activating {display_id(data)}", urgency="critical"
@@ -1456,7 +1460,7 @@ def verify_conn(client, result, data):
             conn.delete_async(None, cleanup_cb, None)
             return
     else:
-        notify(f"Added {conn.get_id()}")
+        notify(f"Connecting to {conn.get_id()}")
     LOOP.quit()
 
 
