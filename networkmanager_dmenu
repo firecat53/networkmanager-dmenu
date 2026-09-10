@@ -21,9 +21,10 @@ The command line argument takes precedence over the environment variable.
 
 __version__ = "2.7.1"
 
+from collections import Counter
 from os.path import basename, expanduser, isfile
 from shutil import which
-from time import monotonic, sleep
+from time import localtime, monotonic, sleep, strftime
 import argparse
 import configparser
 import locale
@@ -496,6 +497,63 @@ def choose_adapter(client):
     return devices[0]
 
 
+def unique_names(conns):
+    """Display name per connection, unique within the list
+
+    Several profiles can share the same id (two saved profiles for one SSID,
+    the same network saved in two places), and the id alone then can't say
+    which profile a menu line means. Qualify the duplicates with when they
+    were last used, which is what actually decides which one is wanted.
+
+    Args: conns - list of NM.RemoteConnection
+    Returns: list of strings, in the order of `conns`
+
+    """
+    ids = Counter(i.get_id() for i in conns)
+    quals = []
+    for conn in conns:
+        if ids[conn.get_id()] == 1:
+            quals.append([])
+            continue
+        setting = conn.get_setting_connection()
+        stamp = setting.get_timestamp() if setting is not None else 0
+        quals.append(
+            [f"last used {strftime('%Y-%m-%d', localtime(stamp))}"]
+            if stamp
+            else ["never used"]
+        )
+    # Profiles that were never used, or last used on the same day, are still
+    # not told apart, so add the start of the UUID to whatever is left over.
+    # It says nothing on its own, but it is the handle `nmcli` prints.
+    dups = Counter((i.get_id(), tuple(q)) for i, q in zip(conns, quals))
+    for conn, qual in zip(conns, quals):
+        if qual and dups[(conn.get_id(), tuple(qual))] > 1:
+            qual.append(conn.get_uuid()[:8])
+    return [
+        f"{i.get_id()} ({', '.join(q)})" if q else i.get_id()
+        for i, q in zip(conns, quals)
+    ]
+
+
+def choose_connection(conns):
+    """Ask which of several connection profiles to use
+
+    Args: conns - list of NM.RemoteConnection
+    Returns: NM.RemoteConnection
+
+    """
+    if len(conns) == 1:
+        return conns[0]
+    names = unique_names(conns)
+    sel = run_dmenu(dmenu_cmd("CHOOSE CONNECTION:"), "\n".join(names)).stdout
+    if not sel.strip():
+        sys.exit()
+    conns = [i for i, name in zip(conns, names) if name == sel.rstrip("\n")]
+    if len(conns) != 1:
+        raise ValueError(f"Selection was ambiguous: '{str(sel.strip())}'")
+    return conns[0]
+
+
 def is_running(cmd):
     try:
         subprocess.check_output(["pidof", cmd])
@@ -740,12 +798,16 @@ def process_ap(nm_ap, is_active, adapter):
         # (transfer container) return trips a refcount bug in PyGObject that
         # logs GObject criticals at interpreter shutdown
         con = [i for i in conns_cur if nm_ap.connection_valid(i)]
-        if len(con) > 1:
-            raise ValueError("There are multiple connections possible")
-
-        if len(con) == 1:
+        if con:
+            # A mesh network is still a single profile, so more than one match
+            # means the AP really was saved twice: ask which profile to use
             CLIENT.activate_connection_async(
-                con[0], adapter, nm_ap.get_path(), None, activate_cb, nm_ap
+                choose_connection(con),
+                adapter,
+                nm_ap.get_path(),
+                None,
+                activate_cb,
+                nm_ap,
             )
             LOOP.run()
         else:
@@ -975,7 +1037,7 @@ def _create_vpngsm_actions(cons, active_cons, label):
     # would mark both of them active when only one of the two is
     active_con_uuids = [a.get_uuid() for a in active_cons]
     actions = []
-    for con in cons:
+    for con, name in zip(cons, unique_names(cons)):
         is_active = con.get_uuid() in active_con_uuids
         try:
             # Get hotspot ssid
@@ -985,7 +1047,7 @@ def _create_vpngsm_actions(cons, active_cons, label):
                 hotspot = ""
         except AttributeError:
             hotspot = ""
-        action_name = f"{con.get_id()}{hotspot}:{label}"
+        action_name = f"{name}{hotspot}:{label}"
         if is_active:
             active_connection = [
                 a for a in active_cons if a.get_uuid() == con.get_uuid()
@@ -1320,8 +1382,8 @@ def get_passphrase():
 def delete_connection():
     """Display list of NM connections and delete the selected one"""
     conn_acts = [
-        Action(i.get_id(), i.delete_async, args=[None, delete_cb, None])
-        for i in CONNS
+        Action(name, i.delete_async, args=[None, delete_cb, None])
+        for name, i in zip(unique_names(CONNS), CONNS)
     ]
     conn_names = "\n".join([str(i) for i in conn_acts])
     sel = run_dmenu(dmenu_cmd("CHOOSE CONNECTION TO DELETE:"), conn_names).stdout
