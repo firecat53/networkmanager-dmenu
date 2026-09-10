@@ -971,10 +971,12 @@ def create_saved_actions(saved):
 
 
 def _create_vpngsm_actions(cons, active_cons, label):
-    active_con_ids = [a.get_id() for a in active_cons]
+    # Match on UUID, not id: two profiles can share an id, and comparing by id
+    # would mark both of them active when only one of the two is
+    active_con_uuids = [a.get_uuid() for a in active_cons]
     actions = []
     for con in cons:
-        is_active = con.get_id() in active_con_ids
+        is_active = con.get_uuid() in active_con_uuids
         try:
             # Get hotspot ssid
             if con.get_setting_wireless().get_mode() == "ap":
@@ -986,7 +988,7 @@ def _create_vpngsm_actions(cons, active_cons, label):
         action_name = f"{con.get_id()}{hotspot}:{label}"
         if is_active:
             active_connection = [
-                a for a in active_cons if a.get_id() == con.get_id()
+                a for a in active_cons if a.get_uuid() == con.get_uuid()
             ]
             if len(active_connection) != 1:
                 raise ValueError(
