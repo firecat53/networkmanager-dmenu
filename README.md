@@ -40,7 +40,7 @@ Manage NetworkManager connections with supported launchers instead of nm-applet.
  
 ## Requirements
 
-1. Python 3.7+
+1. Python 3.11+
 2. NetworkManager
 3. Dmenu (X), Rofi (X or XWayland), Wofi (Wayland), Yofi (Wayland) or Bemenu (X or Wayland)
 4. Python gobject (PyGObject, python-gobject, etc.)
